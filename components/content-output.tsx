@@ -19,6 +19,7 @@ import {
   Save,
   X,
   Layers,
+  RefreshCw,
 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { TemplateCarouselEditor } from "./template-carousel-editor"
@@ -43,6 +44,7 @@ export function ContentOutput({ title, socialPost, newsletter, originalUrl }: Co
     social: "",
     newsletter: "",
   })
+  const [retryingGeneration, setRetryingGeneration] = useState<string | null>(null)
   
   // Carousel editor state
   const [showCarouselEditor, setShowCarouselEditor] = useState<{ social: boolean; newsletter: boolean }>({
@@ -67,6 +69,82 @@ export function ContentOutput({ title, socialPost, newsletter, originalUrl }: Co
   
   
   const { toast } = useToast()
+
+  // Helper function to detect failed generation
+  const isFailedGeneration = (content: string, type: "social" | "newsletter") => {
+    const failureTexts = [
+      "Failed to generate social post",
+      "Failed to generate newsletter", 
+      "Failed to generate content with AI",
+      "Failed to generate content"
+    ]
+    return failureTexts.some(text => content.includes(text)) || 
+           (content.trim().length === 0) || 
+           (content.trim().toLowerCase().startsWith("error"))
+  }
+
+  // Retry generation function
+  const retryGeneration = async (type: "social" | "newsletter") => {
+    setRetryingGeneration(type)
+    try {
+      console.log(`Retrying ${type} generation...`)
+      
+      // Check if we have an original URL to work with
+      if (!originalUrl) {
+        toast({
+          title: "Cannot retry generation",
+          description: "No original source available. Please try converting again from the main page.",
+          variant: "destructive",
+        })
+        return
+      }
+      
+      const response = await fetch("/api/regenerate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          type, // "social" or "newsletter"
+          originalUrl,
+          currentContent: type === "social" ? currentSocialPost : currentNewsletter
+        }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || `Failed to regenerate ${type}`)
+      }
+
+      const data = await response.json()
+      
+      // Update the content
+      if (type === "social" && data.socialPost) {
+        setEditedContent(prev => ({ ...prev, social: data.socialPost }))
+        setOriginalContent(prev => ({ ...prev, social: data.socialPost }))
+        toast({
+          title: "Social post regenerated",
+          description: "Content has been successfully regenerated",
+        })
+      } else if (type === "newsletter" && data.newsletter) {
+        setEditedContent(prev => ({ ...prev, newsletter: data.newsletter }))
+        setOriginalContent(prev => ({ ...prev, newsletter: data.newsletter }))
+        toast({
+          title: "Newsletter regenerated", 
+          description: "Content has been successfully regenerated",
+        })
+      }
+    } catch (error: any) {
+      console.error(`${type} regeneration error:`, error)
+      toast({
+        title: "Regeneration failed",
+        description: error.message || `Could not regenerate ${type}`,
+        variant: "destructive",
+      })
+    } finally {
+      setRetryingGeneration(null)
+    }
+  }
 
   const generateImage = async (content: string, type: "social" | "newsletter") => {
     setGeneratingImage(type)
@@ -267,8 +345,32 @@ export function ContentOutput({ title, socialPost, newsletter, originalUrl }: Co
                 </div>
               </div>
             ) : (
-              <div className="p-4 bg-muted rounded-lg border-l-4 border-l-primary">
-                <p className="whitespace-pre-wrap text-sm leading-relaxed">{currentSocialPost}</p>
+              <div className="space-y-3">
+                <div className={`p-4 rounded-lg border-l-4 ${
+                  isFailedGeneration(currentSocialPost, "social") 
+                    ? "bg-red-50 dark:bg-red-950/20 border-l-red-500" 
+                    : "bg-muted border-l-primary"
+                }`}>
+                  <p className="whitespace-pre-wrap text-sm leading-relaxed">{currentSocialPost}</p>
+                </div>
+                {isFailedGeneration(currentSocialPost, "social") && (
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => retryGeneration("social")}
+                      disabled={retryingGeneration === "social"}
+                      className="flex items-center gap-2 text-red-600 border-red-200 hover:bg-red-50"
+                    >
+                      {retryingGeneration === "social" ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <RefreshCw className="h-4 w-4" />
+                      )}
+                      Retry Generation
+                    </Button>
+                  </div>
+                )}
               </div>
             )}
 
@@ -433,10 +535,34 @@ export function ContentOutput({ title, socialPost, newsletter, originalUrl }: Co
                 </div>
               </div>
             ) : (
-              <div className="p-6 bg-muted rounded-lg">
-                <div className="prose prose-sm max-w-none dark:prose-invert">
-                  <div className="whitespace-pre-wrap leading-relaxed">{currentNewsletter}</div>
+              <div className="space-y-3">
+                <div className={`p-6 rounded-lg ${
+                  isFailedGeneration(currentNewsletter, "newsletter") 
+                    ? "bg-red-50 dark:bg-red-950/20 border border-red-200" 
+                    : "bg-muted"
+                }`}>
+                  <div className="prose prose-sm max-w-none dark:prose-invert">
+                    <div className="whitespace-pre-wrap leading-relaxed">{currentNewsletter}</div>
+                  </div>
                 </div>
+                {isFailedGeneration(currentNewsletter, "newsletter") && (
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => retryGeneration("newsletter")}
+                      disabled={retryingGeneration === "newsletter"}
+                      className="flex items-center gap-2 text-red-600 border-red-200 hover:bg-red-50"
+                    >
+                      {retryingGeneration === "newsletter" ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <RefreshCw className="h-4 w-4" />
+                      )}
+                      Retry Generation
+                    </Button>
+                  </div>
+                )}
               </div>
             )}
 
