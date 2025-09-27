@@ -11,8 +11,6 @@ import {
   Copy,
   CheckCircle,
   Share2,
-  Twitter,
-  Linkedin,
   ImageIcon,
   Loader2,
   ChevronDown,
@@ -153,52 +151,6 @@ export function ContentOutput({ title, socialPost, newsletter, originalUrl }: Co
     }
   }
 
-  const shareToTwitter = () => {
-    const tweetText = encodeURIComponent(currentSocialPost)
-    const url = `https://twitter.com/intent/tweet?text=${tweetText}`
-    window.open(url, "_blank")
-  }
-
-  const shareToLinkedIn = async () => {
-    // LinkedIn doesn't support pre-populating text, so we copy the text to clipboard
-    // and open LinkedIn with a simple share URL, then show instructions
-    try {
-      await navigator.clipboard.writeText(currentSocialPost)
-      
-      if (originalUrl) {
-        // Open LinkedIn share dialog with the original URL
-        const linkedinUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(originalUrl)}`
-        window.open(linkedinUrl, "_blank")
-        
-        // Show toast with instructions
-        toast({
-          title: "Text copied to clipboard",
-          description: "Paste the text in the LinkedIn post dialog. LinkedIn doesn't support pre-filled text.",
-        })
-      } else {
-        // No original URL, just open LinkedIn compose
-        const linkedinUrl = "https://www.linkedin.com/feed/"
-        window.open(linkedinUrl, "_blank")
-        
-        toast({
-          title: "Text copied to clipboard",
-          description: "Paste the text in the LinkedIn post dialog. LinkedIn doesn't support pre-filled text.",
-        })
-      }
-    } catch (err) {
-      // Fallback: just open LinkedIn without copying
-      const linkedinUrl = originalUrl 
-        ? `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(originalUrl)}`
-        : "https://www.linkedin.com/feed/"
-      window.open(linkedinUrl, "_blank")
-      
-      toast({
-        title: "LinkedIn opened",
-        description: "LinkedIn doesn't support pre-filled text. You'll need to type your message manually.",
-        variant: "default",
-      })
-    }
-  }
 
   // Editing functions
   const startEditing = (type: "social" | "newsletter") => {
@@ -259,26 +211,6 @@ export function ContentOutput({ title, socialPost, newsletter, originalUrl }: Co
                 <Share2 className="h-5 w-5" />
                 Social Media Post
               </CardTitle>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => shareToTwitter()}
-                  className="flex items-center gap-2"
-                >
-                  <Twitter className="h-4 w-4" />
-                  Tweet
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => shareToLinkedIn()}
-                  className="flex items-center gap-2"
-                >
-                  <Linkedin className="h-4 w-4" />
-                  Share
-                </Button>
-              </div>
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
