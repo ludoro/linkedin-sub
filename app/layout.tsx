@@ -20,6 +20,12 @@ export const metadata: Metadata = {
   title: "LinkCraft - AI-Powered Content Converter",
   description: "Transform any link into engaging social posts and newsletter articles using advanced AI",
   generator: "v0.app",
+  icons: {
+    icon: [
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+    ],
+    apple: '/apple-touch-icon.svg',
+  },
 }
 
 export default function RootLayout({
