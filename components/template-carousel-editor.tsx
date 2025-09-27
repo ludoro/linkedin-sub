@@ -134,19 +134,25 @@ export function TemplateCarouselEditor({ content, contentType, onClose }: Templa
   const applyTemplate = (template: CarouselTemplate) => {
     setSelectedTemplate(template)
     
-    // Split the content intelligently into slides
-    const slideContents = splitContentIntoSlides(content, 5)
-    
-    // Create slides using the template with proper content distribution
-    const newSlides = slideContents.map((slideContent, index) => 
-      createSlideFromTemplate(template, index + 1, slideContent)
-    )
-    
-    setSlides(newSlides)
-    toast({
-      title: "Template applied",
-      description: `${template.name} template has been applied to your carousel with ${newSlides.length} slides`,
-    })
+    // If we already have slides, reuse their content and just apply the new template styling
+    if (slides.length > 0) {
+      const newSlides = slides.map((slide, index) => 
+        createSlideFromTemplate(template, index + 1, {
+          headline: slide.headline,
+          content: slide.content
+        })
+      )
+      
+      setSlides(newSlides)
+    } else {
+      // Only if we have no slides yet, fall back to splitting the original content
+      const slideContents = splitContentIntoSlides(content, 5)
+      const newSlides = slideContents.map((slideContent, index) => 
+        createSlideFromTemplate(template, index + 1, slideContent)
+      )
+      
+      setSlides(newSlides)
+    }
   }
 
   const handleSlideUpdate = (slideIndex: number, updatedSlide: CarouselSlide) => {

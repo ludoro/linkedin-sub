@@ -12,28 +12,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Content is required" }, { status: 400 })
     }
 
-    // If templateId is provided, use template-based generation
-    if (templateId) {
-      const template = carouselTemplates.find(t => t.id === templateId)
-      if (!template) {
-        return NextResponse.json({ error: "Template not found" }, { status: 404 })
-      }
-
-      // Split the content intelligently into slides
-      const slideContents = splitContentIntoSlides(content, 5)
-      
-      // Create slides using the template with proper content distribution
-      const slides = slideContents.map((slideContent, index) => 
-        createSlideFromTemplate(template, index + 1, slideContent)
-      )
-
-      return NextResponse.json({
-        success: true,
-        slides: slides,
-        template: template
-      })
-    }
-
+    // Check if API key is available for AI generation
     const apiKey = process.env.GEMINI_API_KEY
     if (!apiKey) {
       console.log("GEMINI_API_KEY not found")
@@ -46,6 +25,166 @@ export async function POST(request: NextRequest) {
       apiKey: apiKey,
     })
 
+    // If templateId is provided, we'll still use AI to generate content but apply the template afterward
+    if (templateId) {
+      const template = carouselTemplates.find(t => t.id === templateId)
+      if (!template) {
+        return NextResponse.json({ error: "Template not found" }, { status: 404 })
+      }
+
+      // Use AI to generate carousel content first
+      const carouselPrompt = `You are a carousel content generator. Create exactly 5 slides for a ${type === "social" ? "social media" : "newsletter"} carousel based on this content:
+
+${content}
+
+IMPORTANT: You must respond with ONLY a valid JSON array. No other text, explanations, or markdown formatting.
+
+Requirements:
+- Craft exactly 5 engaging slides with original, compelling text
+- Each slide should have a clear, focused message derived from the source content
+- Create compelling headlines and concise, impactful text
+- Ensure smooth flow between slides
+- Each slide should be self-contained but part of a cohesive story
+- DO NOT simply break up the original text - instead, create new, engaging content inspired by it
+
+JSON format (respond with ONLY this structure):
+[
+  {
+    "slideNumber": 1,
+    "headline": "Compelling headline for slide 1",
+    "content": "Main content text for slide 1",
+    "backgroundColor": "${template.backgroundColor}",
+    "textColor": "${template.defaultColors.text}",
+    "textSize": "medium",
+    "fontFamily": "${template.defaultFonts.heading}",
+    "textAlign": "center",
+    "fontWeight": "bold",
+    "backgroundImage": null
+  },
+  {
+    "slideNumber": 2,
+    "headline": "Compelling headline for slide 2",
+    "content": "Main content text for slide 2",
+    "backgroundColor": "${template.backgroundColor}",
+    "textColor": "${template.defaultColors.text}",
+    "textSize": "medium",
+    "fontFamily": "${template.defaultFonts.heading}",
+    "textAlign": "center",
+    "fontWeight": "semibold",
+    "backgroundImage": null
+  },
+  {
+    "slideNumber": 3,
+    "headline": "Compelling headline for slide 3",
+    "content": "Main content text for slide 3",
+    "backgroundColor": "${template.backgroundColor}",
+    "textColor": "${template.defaultColors.text}",
+    "textSize": "medium",
+    "fontFamily": "${template.defaultFonts.heading}",
+    "textAlign": "center",
+    "fontWeight": "semibold",
+    "backgroundImage": null
+  },
+  {
+    "slideNumber": 4,
+    "headline": "Compelling headline for slide 4",
+    "content": "Main content text for slide 4",
+    "backgroundColor": "${template.backgroundColor}",
+    "textColor": "${template.defaultColors.text}",
+    "textSize": "medium",
+    "fontFamily": "${template.defaultFonts.heading}",
+    "textAlign": "center",
+    "fontWeight": "semibold",
+    "backgroundImage": null
+  },
+  {
+    "slideNumber": 5,
+    "headline": "Compelling headline for slide 5",
+    "content": "Main content text for slide 5",
+    "backgroundColor": "${template.backgroundColor}",
+    "textColor": "${template.defaultColors.text}",
+    "textSize": "medium",
+    "fontFamily": "${template.defaultFonts.heading}",
+    "textAlign": "center",
+    "fontWeight": "bold",
+    "backgroundImage": null
+  }
+]
+
+Remember: Respond with ONLY the JSON array, no other text.`
+
+      try {
+        const result = await ai.models.generateContent({
+          model: "gemini-2.5-flash",
+          contents: carouselPrompt,
+        })
+
+        const responseText = result.text?.trim()
+        if (!responseText) {
+          throw new Error("No response received from AI service")
+        }
+
+        // Parse the AI response
+        let carouselData
+        try {
+          carouselData = JSON.parse(responseText)
+        } catch {
+          const jsonMatch = responseText.match(/\[[\s\S]*\]/)
+          if (jsonMatch) {
+            carouselData = JSON.parse(jsonMatch[0])
+          } else {
+            throw new Error("No JSON array found in response")
+          }
+        }
+
+        // Validate that we have exactly 5 slides
+        if (!Array.isArray(carouselData) || carouselData.length !== 5) {
+          throw new Error("Invalid carousel data structure - expected exactly 5 slides")
+        }
+
+        // Apply template styling to AI-generated content
+        const templatedSlides = carouselData.map((slide: any, index: number) => {
+          const templatedSlide = createSlideFromTemplate(template, index + 1, {
+            headline: slide.headline,
+            content: slide.content
+          })
+          
+          // Preserve any AI-specified styling
+          return {
+            ...templatedSlide,
+            backgroundColor: slide.backgroundColor || templatedSlide.backgroundColor,
+            textColor: slide.textColor || templatedSlide.textColor,
+            fontFamily: slide.fontFamily || templatedSlide.fontFamily,
+            textAlign: slide.textAlign || templatedSlide.textAlign,
+            fontWeight: slide.fontWeight || templatedSlide.fontWeight,
+            textSize: slide.textSize || templatedSlide.textSize
+          }
+        })
+
+        return NextResponse.json({
+          success: true,
+          slides: templatedSlides,
+          template: template
+        })
+
+      } catch (error: any) {
+        console.error("AI generation failed for template, falling back to template-only:", error)
+        
+        // If AI fails, fall back to basic template structure but with better content
+        const slideContents = splitContentIntoSlides(content, 5)
+        const slides = slideContents.map((slideContent, index) => 
+          createSlideFromTemplate(template, index + 1, slideContent)
+        )
+
+        return NextResponse.json({
+          success: true,
+          slides: slides,
+          template: template,
+          note: "Generated using template fallback due to AI service unavailability"
+        })
+      }
+    }
+
     // Create a detailed prompt for generating carousel slides
     const carouselPrompt = `You are a carousel content generator. Create exactly 5 slides for a ${type === "social" ? "social media" : "newsletter"} carousel based on this content:
 
@@ -54,11 +193,12 @@ ${content}
 IMPORTANT: You must respond with ONLY a valid JSON array. No other text, explanations, or markdown formatting.
 
 Requirements:
-- Split the content into exactly 5 engaging slides
-- Each slide should have a clear, focused message
-- Use compelling headlines and concise text
+- Craft exactly 5 engaging slides with original, compelling text
+- Each slide should have a clear, focused message derived from the source content
+- Create compelling headlines and concise, impactful text
 - Ensure smooth flow between slides
 - Each slide should be self-contained but part of a cohesive story
+- DO NOT simply break up the original text - instead, create new, engaging content inspired by it
 
 JSON format (respond with ONLY this structure):
 [
