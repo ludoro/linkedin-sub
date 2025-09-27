@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -18,11 +18,19 @@ interface ConversionResult {
   title: string
 }
 
-interface LinkConverterProps {
-  onContentGenerated?: (hasContent: boolean) => void
+interface GeneratedContent {
+  title: string
+  socialPost: string
+  newsletter: string
+  originalUrl?: string
 }
 
-export function LinkConverter({ onContentGenerated }: LinkConverterProps) {
+interface LinkConverterProps {
+  onContentGenerated?: (content: GeneratedContent) => void
+  initialContent?: GeneratedContent | null
+}
+
+export function LinkConverter({ onContentGenerated, initialContent }: LinkConverterProps) {
   const [inputMode, setInputMode] = useState<"url" | "text">("url")
   const [url, setUrl] = useState("")
   const [articleText, setArticleText] = useState("")
@@ -31,6 +39,13 @@ export function LinkConverter({ onContentGenerated }: LinkConverterProps) {
   const [result, setResult] = useState<ConversionResult | null>(null)
   const [error, setError] = useState<string | null>(null)
   const { toast } = useToast()
+
+  // Set initial content if provided
+  useEffect(() => {
+    if (initialContent) {
+      setResult(initialContent)
+    }
+  }, [initialContent])
 
   const isValidUrl = (string: string) => {
     try {
@@ -94,7 +109,7 @@ export function LinkConverter({ onContentGenerated }: LinkConverterProps) {
       const data = await response.json()
       console.log("API success response:", data)
       setResult(data)
-      onContentGenerated?.(true)
+      onContentGenerated?.(data)
       toast({
         title: "Conversion successful",
         description: "Your content has been generated successfully",

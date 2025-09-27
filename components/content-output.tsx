@@ -18,8 +18,10 @@ import {
   Edit3,
   Save,
   X,
+  Layers,
 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
+import { InlineCarouselEditor } from "./inline-carousel-editor"
 
 interface ContentOutputProps {
   title: string
@@ -42,6 +44,13 @@ export function ContentOutput({ title, socialPost, newsletter, originalUrl }: Co
     newsletter: "",
   })
   
+  // Carousel editor state
+  const [showCarouselEditor, setShowCarouselEditor] = useState<{ social: boolean; newsletter: boolean }>({
+    social: false,
+    newsletter: false,
+  })
+  const [carouselContent, setCarouselContent] = useState<{ content: string; type: 'social' | 'newsletter' } | null>(null)
+  
   // Editing state management
   const [isEditing, setIsEditing] = useState<{ social: boolean; newsletter: boolean }>({
     social: false,
@@ -55,6 +64,7 @@ export function ContentOutput({ title, socialPost, newsletter, originalUrl }: Co
     social: socialPost,
     newsletter: newsletter,
   })
+  
   
   const { toast } = useToast()
 
@@ -174,6 +184,19 @@ export function ContentOutput({ title, socialPost, newsletter, originalUrl }: Co
 
   const handleContentChange = (type: "social" | "newsletter", value: string) => {
     setEditedContent((prev) => ({ ...prev, [type]: value }))
+  }
+
+  // Handle opening carousel editor inline
+  const openCarouselEditorInline = (type: "social" | "newsletter") => {
+    const content = type === "social" ? currentSocialPost : currentNewsletter
+    setCarouselContent({ content, type })
+    setShowCarouselEditor((prev) => ({ ...prev, [type]: true }))
+  }
+
+  // Handle closing carousel editor
+  const closeCarouselEditor = (type: "social" | "newsletter") => {
+    setShowCarouselEditor((prev) => ({ ...prev, [type]: false }))
+    setCarouselContent(null)
   }
 
   // Use edited content for display
@@ -312,7 +335,7 @@ export function ContentOutput({ title, socialPost, newsletter, originalUrl }: Co
 
             <Separator />
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               {!isEditing.social && (
                 <Button
                   variant="outline"
@@ -352,9 +375,27 @@ export function ContentOutput({ title, socialPost, newsletter, originalUrl }: Co
                   </>
                 )}
               </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => openCarouselEditorInline('social')}
+                className="flex items-center gap-2"
+              >
+                <Layers className="h-4 w-4" />
+                Generate Carousel
+              </Button>
             </div>
           </CardContent>
         </Card>
+
+        {/* Social Media Carousel Editor */}
+        {showCarouselEditor.social && carouselContent?.type === 'social' && (
+          <InlineCarouselEditor
+            content={carouselContent.content}
+            contentType="social"
+            onClose={() => closeCarouselEditor('social')}
+          />
+        )}
 
         {/* Newsletter Content */}
         <Card>
@@ -461,7 +502,7 @@ export function ContentOutput({ title, socialPost, newsletter, originalUrl }: Co
 
             <Separator />
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               {!isEditing.newsletter && (
                 <Button
                   variant="outline"
@@ -501,9 +542,27 @@ export function ContentOutput({ title, socialPost, newsletter, originalUrl }: Co
                   </>
                 )}
               </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => openCarouselEditorInline('newsletter')}
+                className="flex items-center gap-2"
+              >
+                <Layers className="h-4 w-4" />
+                Generate Carousel
+              </Button>
             </div>
           </CardContent>
         </Card>
+
+        {/* Newsletter Carousel Editor */}
+        {showCarouselEditor.newsletter && carouselContent?.type === 'newsletter' && (
+          <InlineCarouselEditor
+            content={carouselContent.content}
+            contentType="newsletter"
+            onClose={() => closeCarouselEditor('newsletter')}
+          />
+        )}
       </div>
 
     </>
