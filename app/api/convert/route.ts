@@ -147,7 +147,7 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json({
-      title: mode === "url" ? "Generated from URL" : "Generated from Text",
+      title: mode === "url" ? "Generated from URL" : "Generated Content",
       socialPost,
       newsletter,
     })

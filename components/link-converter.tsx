@@ -180,66 +180,85 @@ export function LinkConverter({ onContentGenerated }: LinkConverterProps) {
                   </Button>
                 </div>
 
-                <div className="space-y-2">
-                  <label className="text-sm font-medium flex items-center gap-2">
-                    <Type className="h-4 w-4" />
-                    Text Style Prompt (Optional)
-                  </label>
-                  <Textarea
-                    placeholder="e.g., Make it casual and friendly, use emojis, target young professionals..."
-                    value={textPrompt}
-                    onChange={(e) => setTextPrompt(e.target.value)}
-                    className="min-h-[80px]"
-                    disabled={isLoading}
-                  />
-                </div>
-
                 {inputMode === "url" ? (
-                  <div className="flex gap-2">
-                    <Input
-                      placeholder="https://example.com/article"
-                      value={url}
-                      onChange={(e) => {
-                        setUrl(e.target.value)
-                        setError(null)
-                      }}
-                      onKeyPress={handleKeyPress}
-                      className="flex-1"
-                      disabled={isLoading}
-                    />
-                    <Button
-                      onClick={() => {
-                        console.log("Button clicked!")
-                        handleConvert()
-                      }}
-                      disabled={!url || isLoading || !isValidUrl(url)}
-                      className="min-w-[120px]"
-                    >
-                      {isLoading ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Converting
-                        </>
-                      ) : (
-                        "Convert"
-                      )}
-                    </Button>
+                  <div className="space-y-4">
+                    <div className="flex gap-2">
+                      <Input
+                        placeholder="https://example.com/article"
+                        value={url}
+                        onChange={(e) => {
+                          setUrl(e.target.value)
+                          setError(null)
+                        }}
+                        onKeyPress={handleKeyPress}
+                        className="flex-1"
+                        disabled={isLoading}
+                      />
+                      <Button
+                        onClick={() => {
+                          console.log("Button clicked!")
+                          handleConvert()
+                        }}
+                        disabled={!url || isLoading || !isValidUrl(url)}
+                        className="min-w-[120px]"
+                      >
+                        {isLoading ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Converting
+                          </>
+                        ) : (
+                          "Convert"
+                        )}
+                      </Button>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium flex items-center gap-2">
+                        <Type className="h-4 w-4" />
+                        Text Style Prompt (Optional)
+                      </label>
+                      <Textarea
+                        placeholder="e.g., Make it casual and friendly, use emojis, target young professionals..."
+                        value={textPrompt}
+                        onChange={(e) => setTextPrompt(e.target.value)}
+                        className="min-h-[80px]"
+                        disabled={isLoading}
+                      />
+                    </div>
                   </div>
                 ) : (
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">
-                      Article Text
-                    </label>
-                    <Textarea
-                      placeholder="Paste your article text here..."
-                      value={articleText}
-                      onChange={(e) => {
-                        setArticleText(e.target.value)
-                        setError(null)
-                      }}
-                      className="min-h-[200px]"
-                      disabled={isLoading}
-                    />
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">
+                        Article Text
+                      </label>
+                      <Textarea
+                        placeholder="Paste your article text here..."
+                        value={articleText}
+                        onChange={(e) => {
+                          setArticleText(e.target.value)
+                          setError(null)
+                        }}
+                        className="min-h-[200px]"
+                        disabled={isLoading}
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium flex items-center gap-2">
+                        <Type className="h-4 w-4" />
+                        Text Style Prompt (Optional)
+                      </label>
+                      <Textarea
+                        placeholder="e.g., Make it casual and friendly, use emojis, target young professionals..."
+                        value={textPrompt}
+                        onChange={(e) => setTextPrompt(e.target.value)}
+                        className="min-h-[80px]"
+                        disabled={isLoading}
+                      />
+                    </div>
+                    
                     <Button
                       onClick={() => {
                         console.log("Button clicked!")
