@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import html2canvas from "html2canvas"
+import html2canvas from "html2canvas-pro"
 import jsPDF from "jspdf"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -253,11 +253,15 @@ export function TemplateCarouselEditor({ content, contentType, onClose }: Templa
   }
 
   const convertToRGB = (color: string): string => {
-    if (!color) return '#ffffff'
+    if (!color || color === 'undefined' || color === 'null') {
+      return '#ffffff'
+    }
     
+    // Already in hex or rgb format
     if (color.startsWith('#')) return color
     if (color.startsWith('rgb')) return color
     
+    // Handle modern color formats and CSS variables
     if (color.includes('oklch') || color.includes('lch') || color.includes('lab') || color.includes('var(') || color.includes('hsl')) {
       try {
         const tempEl = document.createElement('div')
@@ -267,13 +271,19 @@ export function TemplateCarouselEditor({ content, contentType, onClose }: Templa
         tempEl.style.top = '-9999px'
         tempEl.style.left = '-9999px'
         tempEl.style.pointerEvents = 'none'
+        tempEl.style.width = '1px'
+        tempEl.style.height = '1px'
+        tempEl.style.opacity = '0'
+        tempEl.style.zIndex = '-9999'
         document.body.appendChild(tempEl)
         
+        // Force a reflow to ensure the style is applied
         tempEl.offsetHeight
         
         const computedColor = window.getComputedStyle(tempEl).color
         document.body.removeChild(tempEl)
         
+        // Parse RGB values
         const rgbMatch = computedColor.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/)
         if (rgbMatch) {
           const r = parseInt(rgbMatch[1])
@@ -281,11 +291,26 @@ export function TemplateCarouselEditor({ content, contentType, onClose }: Templa
           const b = parseInt(rgbMatch[3])
           return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`
         }
+        
+        // Fallback for rgba values
+        const rgbaMatch = computedColor.match(/rgba\((\d+),\s*(\d+),\s*(\d+),\s*[\d.]+\)/)
+        if (rgbaMatch) {
+          const r = parseInt(rgbaMatch[1])
+          const g = parseInt(rgbaMatch[2])
+          const b = parseInt(rgbaMatch[3])
+          return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`
+        }
       } catch (error) {
         console.warn('Failed to convert color:', color, error)
       }
     }
     
+    // If it's a named color or other format, return as is and let html2canvas handle it
+    if (color && !color.includes('var(')) {
+      return color
+    }
+    
+    // Fallback to white if conversion fails
     return '#ffffff'
   }
 
@@ -311,13 +336,18 @@ export function TemplateCarouselEditor({ content, contentType, onClose }: Templa
         const template = selectedTemplate || getTemplateById(slide.templateId || '')
 
         try {
+          const backgroundColor = convertToRGB(slide.backgroundColor || '#ffffff')
+          const textColor = convertToRGB(slide.textColor || '#000000')
+          
+
           const tempContainer = document.createElement('div')
           tempContainer.style.position = 'absolute'
-          tempContainer.style.left = '-2000px'
+          tempContainer.style.left = '-9999px'
           tempContainer.style.top = '0'
           tempContainer.style.width = '800px'
           tempContainer.style.height = '600px'
-          tempContainer.style.backgroundColor = convertToRGB(slide.backgroundColor || '#ffffff')
+          tempContainer.style.backgroundColor = backgroundColor
+          tempContainer.style.color = textColor
           tempContainer.style.padding = '60px'
           tempContainer.style.display = 'flex'
           tempContainer.style.flexDirection = 'column'
@@ -325,10 +355,9 @@ export function TemplateCarouselEditor({ content, contentType, onClose }: Templa
           tempContainer.style.alignItems = slide.textAlign === 'left' ? 'flex-start' : slide.textAlign === 'right' ? 'flex-end' : 'center'
           tempContainer.style.borderRadius = '16px'
           tempContainer.style.boxShadow = '0 10px 25px rgba(0,0,0,0.1)'
-          tempContainer.style.zIndex = '-1'
-          tempContainer.style.visibility = 'hidden'
-          tempContainer.style.opacity = '0'
+          tempContainer.style.zIndex = '9999'
           tempContainer.style.pointerEvents = 'none'
+          
 
           if (slide.backgroundImage) {
             tempContainer.style.backgroundImage = `url(${slide.backgroundImage})`
@@ -372,7 +401,8 @@ export function TemplateCarouselEditor({ content, contentType, onClose }: Templa
           } else {
             // Fallback to simple text rendering
             const headline = document.createElement('h2')
-            headline.textContent = slide.headline || 'Slide Title'
+            const headlineText = slide.headline || `Slide ${i + 1} Title`
+            headline.textContent = headlineText
             headline.style.marginBottom = '24px'
             headline.style.lineHeight = '1.2'
             headline.style.fontSize = slide.textSize === 'large' ? '36px' : slide.textSize === 'small' ? '24px' : '30px'
@@ -383,7 +413,8 @@ export function TemplateCarouselEditor({ content, contentType, onClose }: Templa
             headline.style.margin = '0 0 24px 0'
 
             const content = document.createElement('p')
-            content.textContent = slide.content || 'Slide content goes here...'
+            const contentText = slide.content || 'This is sample slide content to test PDF generation.'
+            content.textContent = contentText
             content.style.fontSize = slide.textSize === 'large' ? '24px' : slide.textSize === 'small' ? '16px' : '20px'
             content.style.fontWeight = 'normal'
             content.style.lineHeight = '1.5'
@@ -393,11 +424,13 @@ export function TemplateCarouselEditor({ content, contentType, onClose }: Templa
             content.style.margin = '0'
             content.style.maxWidth = '100%'
 
+
             tempContainer.appendChild(headline)
             tempContainer.appendChild(content)
           }
 
           document.body.appendChild(tempContainer)
+
 
           await new Promise(resolve => setTimeout(resolve, 500))
 

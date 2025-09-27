@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import html2canvas from "html2canvas"
+import html2canvas from "html2canvas-pro"
 import jsPDF from "jspdf"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -224,6 +224,10 @@ export function InlineCarouselEditor({ content, contentType, onClose }: InlineCa
         tempEl.style.top = '-9999px'
         tempEl.style.left = '-9999px'
         tempEl.style.pointerEvents = 'none'
+        tempEl.style.width = '1px'
+        tempEl.style.height = '1px'
+        tempEl.style.opacity = '0'
+        tempEl.style.zIndex = '-9999'
         document.body.appendChild(tempEl)
         
         // Force a reflow to ensure the color is computed
@@ -238,6 +242,15 @@ export function InlineCarouselEditor({ content, contentType, onClose }: InlineCa
           const r = parseInt(rgbMatch[1])
           const g = parseInt(rgbMatch[2])
           const b = parseInt(rgbMatch[3])
+          return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`
+        }
+        
+        // Fallback for rgba values
+        const rgbaMatch = computedColor.match(/rgba\((\d+),\s*(\d+),\s*(\d+),\s*[\d.]+\)/)
+        if (rgbaMatch) {
+          const r = parseInt(rgbaMatch[1])
+          const g = parseInt(rgbaMatch[2])
+          const b = parseInt(rgbaMatch[3])
           return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`
         }
       } catch (error) {
@@ -424,7 +437,7 @@ export function InlineCarouselEditor({ content, contentType, onClose }: InlineCa
 
           console.log(`Capturing slide ${i + 1} with html2canvas`)
 
-          // Capture the slide with better configuration
+          // Capture the slide with html2canvas-pro (supports OKLCH colors)
           const canvas = await html2canvas(tempContainer, {
             backgroundColor: convertToRGB(slides[i]?.backgroundColor || '#ffffff'),
             scale: 1.5,
@@ -432,33 +445,10 @@ export function InlineCarouselEditor({ content, contentType, onClose }: InlineCa
             allowTaint: true,
             width: 800,
             height: 600,
-            logging: false,
+            logging: true,
             removeContainer: false,
             foreignObjectRendering: false,
-            imageTimeout: 5000,
-            ignoreElements: (element) => {
-              // Skip elements that might cause color parsing issues
-              return element.style.color?.includes('oklch') || 
-                     element.style.backgroundColor?.includes('oklch') ||
-                     element.style.borderColor?.includes('oklch')
-            },
-            onclone: (clonedDoc) => {
-              // Ensure fonts are loaded in the cloned document
-              const clonedContainer = clonedDoc.querySelector('div')
-              if (clonedContainer) {
-                clonedContainer.style.fontFamily = getCSSFontFamily(slides[i]?.fontFamily || 'inter')
-              }
-              
-              // Convert any remaining oklch colors in the cloned document
-              const allElements = clonedDoc.querySelectorAll('*')
-              allElements.forEach(el => {
-                const computedStyle = window.getComputedStyle(el)
-                if (computedStyle.color?.includes('oklch') || computedStyle.backgroundColor?.includes('oklch')) {
-                  el.style.color = convertToRGB(computedStyle.color)
-                  el.style.backgroundColor = convertToRGB(computedStyle.backgroundColor)
-                }
-              })
-            }
+            imageTimeout: 5000
           })
 
           // Always remove the temporary container to prevent popup issues
