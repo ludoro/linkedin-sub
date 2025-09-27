@@ -136,7 +136,12 @@ export function InlineCarouselEditor({ content, contentType, onClose }: InlineCa
 
   const saveEditing = () => {
     if (editingSlide) {
-      handleSlideUpdate(currentSlide, editingSlide)
+      // Ensure the slide is updated in the main array
+      const updatedSlides = slides.map((slide, index) => 
+        index === currentSlide ? editingSlide : slide
+      )
+      setSlides(updatedSlides)
+      
       setIsEditing(false)
       setEditingSlide(null)
       toast({
@@ -630,10 +635,18 @@ export function InlineCarouselEditor({ content, contentType, onClose }: InlineCa
                       <div className="absolute inset-0 bg-gradient-to-br from-black/20 to-transparent z-10" />
                     )}
                     <div className={`relative z-20 w-full ${getTextAlignClass(slides[currentSlide]?.textAlign || 'center')}`}>
-                      <h2 className={`${getTextSizeClass(slides[currentSlide]?.textSize || 'medium')} ${getFontClass(slides[currentSlide]?.fontFamily || 'inter')} ${getFontWeightClass(slides[currentSlide]?.fontWeight || 'bold')} mb-4 leading-tight`}>
+                      <h2 
+                        className={`${getTextSizeClass(slides[currentSlide]?.textSize || 'medium')} ${getFontClass(slides[currentSlide]?.fontFamily || 'inter')} ${getFontWeightClass(slides[currentSlide]?.fontWeight || 'bold')} mb-4 leading-tight cursor-pointer hover:bg-white/10 rounded px-2 py-1 transition-all duration-200`}
+                        onClick={() => !isEditing && startEditing(currentSlide)}
+                        title="Click to edit headline"
+                      >
                         {slides[currentSlide]?.headline || 'Slide Title'}
                       </h2>
-                      <p className={`text-base ${getFontClass(slides[currentSlide]?.fontFamily || 'inter')} ${getFontWeightClass(slides[currentSlide]?.fontWeight || 'normal')} leading-relaxed`}>
+                      <p 
+                        className={`text-base ${getFontClass(slides[currentSlide]?.fontFamily || 'inter')} ${getFontWeightClass(slides[currentSlide]?.fontWeight || 'normal')} leading-relaxed cursor-pointer hover:bg-white/10 rounded px-2 py-1 transition-all duration-200`}
+                        onClick={() => !isEditing && startEditing(currentSlide)}
+                        title="Click to edit content"
+                      >
                         {slides[currentSlide]?.content || 'Slide content goes here...'}
                       </p>
                     </div>

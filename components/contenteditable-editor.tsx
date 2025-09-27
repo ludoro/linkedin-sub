@@ -75,11 +75,17 @@ export function ContentEditableEditor({ element, onSave, onCancel }: ContentEdit
 
   const handleContentChange = () => {
     if (editableRef.current) {
+      const newContent = editableRef.current.innerText || editableRef.current.textContent || ''
       setEditedElement(prev => ({
         ...prev,
-        content: editableRef.current?.innerText || prev.content
+        content: newContent
       }))
     }
+  }
+
+  const handleBlur = () => {
+    // Ensure content is captured when user leaves the field
+    handleContentChange()
   }
 
   const handleStyleChange = (property: string, value: any) => {
@@ -133,6 +139,7 @@ export function ContentEditableEditor({ element, onSave, onCancel }: ContentEdit
           contentEditable
           suppressContentEditableWarning
           onInput={handleContentChange}
+          onBlur={handleBlur}
           className="min-h-[100px] p-3 border rounded focus:outline-none focus:ring-2 focus:ring-primary"
           style={{
             fontSize: `${editedElement.style.fontSize || 24}px`,

@@ -172,6 +172,8 @@ export function TemplateCarouselEditor({ content, contentType, onClose }: Templa
     }
     
     setEditingSlide(updatedSlide)
+    // Also update the main slides array immediately
+    handleSlideUpdate(currentSlide, updatedSlide)
   }
 
   const startEditing = (slideIndex: number) => {
@@ -185,7 +187,12 @@ export function TemplateCarouselEditor({ content, contentType, onClose }: Templa
 
   const saveEditing = () => {
     if (editingSlide) {
-      handleSlideUpdate(currentSlide, editingSlide)
+      // Ensure the slide is updated in the main array
+      const updatedSlides = slides.map((slide, index) => 
+        index === currentSlide ? editingSlide : slide
+      )
+      setSlides(updatedSlides)
+      
       setIsEditing(false)
       setEditingSlide(null)
       setEditingElement(null)
@@ -538,7 +545,7 @@ export function TemplateCarouselEditor({ content, contentType, onClose }: Templa
           {slide.elements.map((element) => (
             <div
               key={element.id}
-              className="absolute"
+              className="absolute group"
               style={{
                 left: `${element.position.x}%`,
                 top: `${element.position.y}%`,
@@ -558,13 +565,25 @@ export function TemplateCarouselEditor({ content, contentType, onClose }: Templa
                 margin: `${element.style.margin || 0}px`,
                 cursor: element.editable ? 'pointer' : 'default'
               }}
-              onClick={() => element.editable && startElementEditing(element)}
+                onClick={() => {
+                  if (element.editable && !isEditing) {
+                    startEditing(currentSlide)
+                    setTimeout(() => startElementEditing(element), 100)
+                  } else if (element.editable && isEditing) {
+                    startElementEditing(element)
+                  }
+                }}
             >
               {element.type === 'text' ? (
-                <span className={element.editable ? 'hover:bg-blue-100 rounded px-1' : ''}>
+                <span className={element.editable ? 'hover:bg-blue-100 hover:shadow-sm rounded px-2 py-1 transition-all duration-200 border-2 border-transparent hover:border-blue-200' : ''}>
                   {element.content}
                 </span>
               ) : null}
+              {element.editable && (
+                <div className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs px-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                  Edit
+                </div>
+              )}
             </div>
           ))}
         </div>
