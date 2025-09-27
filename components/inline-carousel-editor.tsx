@@ -1,6 +1,8 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import html2canvas from "html2canvas"
+import jsPDF from "jspdf"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -24,7 +26,6 @@ import {
   Edit3,
   Download,
   FileText,
-  Image,
   Settings,
   Layout,
   AlignLeft,
@@ -191,38 +192,161 @@ export function InlineCarouselEditor({ content, contentType, onClose }: InlineCa
     }
   }
 
-  const exportCarousel = async (format: 'pdf' | 'png') => {
+  const getCSSFontFamily = (fontFamily: string) => {
+    switch (fontFamily) {
+      case 'inter': return 'Inter, sans-serif'
+      case 'roboto': return 'Roboto, sans-serif'
+      case 'opensans': return 'Open Sans, sans-serif'
+      case 'playfair': return 'Playfair Display, serif'
+      case 'montserrat': return 'Montserrat, sans-serif'
+      case 'lato': return 'Lato, sans-serif'
+      default: return 'Inter, sans-serif'
+    }
+  }
+
+  const exportCarousel = async () => {
     setIsExporting(true)
     try {
-      // For now, we'll create a simple download of the carousel data
-      // In a real implementation, you'd use libraries like html2canvas for PNG or jsPDF for PDF
-      const carouselData = {
-        slides: slides,
-        metadata: {
-          contentType,
-          generatedAt: new Date().toISOString(),
-          totalSlides: slides.length
+      if (slides.length === 0) {
+        throw new Error('No slides to export')
+      }
+
+      const carouselElement = document.getElementById('carousel-container')
+      
+      if (carouselElement) {
+        try {
+          const canvas = await html2canvas(carouselElement, {
+            backgroundColor: '#ffffff',
+            scale: 2,
+            useCORS: true,
+            allowTaint: true,
+            logging: false
+          })
+
+          const imgData = canvas.toDataURL('image/png', 0.95)
+          const pdf = new jsPDF({
+            orientation: canvas.width > canvas.height ? 'landscape' : 'portrait',
+            unit: 'mm',
+            format: 'a4'
+          })
+
+          const pdfWidth = pdf.internal.pageSize.getWidth()
+          const pdfHeight = pdf.internal.pageSize.getHeight()
+          const imgWidth = canvas.width
+          const imgHeight = canvas.height
+          const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight)
+          const imgX = (pdfWidth - imgWidth * ratio) / 2
+          const imgY = (pdfHeight - imgHeight * ratio) / 2
+
+          pdf.addImage(imgData, 'PNG', imgX, imgY, imgWidth * ratio, imgHeight * ratio)
+          pdf.save(`carousel-${contentType}-${new Date().getTime()}.pdf`)
+
+          toast({
+            title: "Carousel exported",
+            description: "Current slide exported as PDF",
+          })
+          return
+        } catch (simpleError) {
+          console.log('Simple PDF export failed, trying complex approach:', simpleError)
         }
       }
 
-      const blob = new Blob([JSON.stringify(carouselData, null, 2)], { type: 'application/json' })
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = `carousel-${contentType}-${new Date().getTime()}.json`
-      document.body.appendChild(a)
-      a.click()
-      document.body.removeChild(a)
-      URL.revokeObjectURL(url)
+      // Create a multi-page PDF with all slides
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4'
+      })
+
+      for (let i = 0; i < slides.length; i++) {
+        if (i > 0) {
+          pdf.addPage()
+        }
+
+        try {
+          // Create a temporary container for this slide
+          const tempContainer = document.createElement('div')
+          tempContainer.style.position = 'absolute'
+          tempContainer.style.left = '-9999px'
+          tempContainer.style.top = '0'
+          tempContainer.style.width = '400px'
+          tempContainer.style.height = '600px'
+          tempContainer.style.backgroundColor = slides[i]?.backgroundColor || '#ffffff'
+          tempContainer.style.color = slides[i]?.textColor || '#000000'
+          tempContainer.style.padding = '32px'
+          tempContainer.style.display = 'flex'
+          tempContainer.style.flexDirection = 'column'
+          tempContainer.style.justifyContent = 'center'
+          tempContainer.style.alignItems = 'center'
+          tempContainer.style.textAlign = slides[i]?.textAlign || 'center'
+          tempContainer.style.fontFamily = getCSSFontFamily(slides[i]?.fontFamily || 'inter')
+          tempContainer.style.fontWeight = slides[i]?.fontWeight || 'bold'
+          tempContainer.style.fontSize = slides[i]?.textSize === 'large' ? '24px' : slides[i]?.textSize === 'small' ? '16px' : '20px'
+          tempContainer.style.borderRadius = '16px'
+          tempContainer.style.boxShadow = '0 10px 25px rgba(0,0,0,0.1)'
+          tempContainer.style.visibility = 'hidden'
+
+          const headline = document.createElement('h2')
+          headline.textContent = slides[i]?.headline || 'Slide Title'
+          headline.style.marginBottom = '16px'
+          headline.style.lineHeight = '1.2'
+          headline.style.fontSize = slides[i]?.textSize === 'large' ? '24px' : slides[i]?.textSize === 'small' ? '16px' : '20px'
+          headline.style.fontWeight = slides[i]?.fontWeight || 'bold'
+
+          const content = document.createElement('p')
+          content.textContent = slides[i]?.content || 'Slide content goes here...'
+          content.style.fontSize = '16px'
+          content.style.fontWeight = 'normal'
+          content.style.lineHeight = '1.5'
+
+          tempContainer.appendChild(headline)
+          tempContainer.appendChild(content)
+          document.body.appendChild(tempContainer)
+
+          // Wait a bit for fonts to load
+          await new Promise(resolve => setTimeout(resolve, 100))
+
+          // Capture the slide
+          const canvas = await html2canvas(tempContainer, {
+            backgroundColor: slides[i]?.backgroundColor || '#ffffff',
+            scale: 1.5,
+            useCORS: true,
+            allowTaint: true,
+            width: 400,
+            height: 600,
+            logging: false,
+            removeContainer: false
+          })
+
+          document.body.removeChild(tempContainer)
+
+          const imgData = canvas.toDataURL('image/png', 0.95)
+          const pdfWidth = pdf.internal.pageSize.getWidth()
+          const pdfHeight = pdf.internal.pageSize.getHeight()
+          const imgWidth = canvas.width
+          const imgHeight = canvas.height
+          const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight)
+          const imgX = (pdfWidth - imgWidth * ratio) / 2
+          const imgY = (pdfHeight - imgHeight * ratio) / 2
+
+          pdf.addImage(imgData, 'PNG', imgX, imgY, imgWidth * ratio, imgHeight * ratio)
+        } catch (slideError) {
+          console.error(`Error processing slide ${i + 1}:`, slideError)
+          // Continue with other slides even if one fails
+        }
+      }
+
+      pdf.save(`carousel-${contentType}-${new Date().getTime()}.pdf`)
 
       toast({
         title: "Carousel exported",
-        description: `Carousel data exported as ${format.toUpperCase()}`,
+        description: `Carousel exported as PDF with ${slides.length} slides`,
       })
     } catch (error) {
+      console.error('Export error:', error)
       toast({
         title: "Export failed",
-        description: "Could not export carousel",
+        description: error instanceof Error ? error.message : "Could not export carousel. Please try again.",
         variant: "destructive",
       })
     } finally {
@@ -297,6 +421,7 @@ export function InlineCarouselEditor({ content, contentType, onClose }: InlineCa
                 {/* Preview Area */}
                 <div className="flex items-center justify-center mb-6">
                   <div 
+                    id="carousel-container"
                     className="w-full max-w-sm aspect-[9/16] rounded-2xl shadow-lg flex flex-col items-center justify-center p-8 relative overflow-hidden border-2 border-gray-200"
                     style={{
                       backgroundColor: slides[currentSlide]?.backgroundColor || '#ffffff',
@@ -649,10 +774,10 @@ export function InlineCarouselEditor({ content, contentType, onClose }: InlineCa
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                <div className="grid grid-cols-2 gap-3">
+                <div className="flex justify-center">
                   <Button
                     variant="outline"
-                    onClick={() => exportCarousel('pdf')}
+                    onClick={() => exportCarousel()}
                     disabled={isExporting}
                     className="flex items-center gap-2"
                   >
@@ -662,19 +787,6 @@ export function InlineCarouselEditor({ content, contentType, onClose }: InlineCa
                       <FileText className="h-4 w-4" />
                     )}
                     Export PDF
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() => exportCarousel('png')}
-                    disabled={isExporting}
-                    className="flex items-center gap-2"
-                  >
-                    {isExporting ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <Image className="h-4 w-4" />
-                    )}
-                    Export PNG
                   </Button>
                 </div>
                 <p className="text-xs text-muted-foreground">
