@@ -40,7 +40,7 @@ import {
 import { useToast } from "@/hooks/use-toast"
 import { CarouselSlide } from "@/types/carousel"
 import { CarouselTemplate, TemplateElement } from "@/types/template"
-import { carouselTemplates, getTemplateById, createSlideFromTemplate } from "@/lib/templates"
+import { carouselTemplates, getTemplateById, createSlideFromTemplate, splitContentIntoSlides } from "@/lib/templates"
 import { ContentEditableEditor } from "./contenteditable-editor"
 
 const fontOptions = [
@@ -134,21 +134,18 @@ export function TemplateCarouselEditor({ content, contentType, onClose }: Templa
   const applyTemplate = (template: CarouselTemplate) => {
     setSelectedTemplate(template)
     
-    // Convert content into slides using the template
-    const contentLines = content.split('\n').filter(line => line.trim())
-    const slidesPerTemplate = Math.ceil(contentLines.length / 2) // Rough estimate
+    // Split the content intelligently into slides
+    const slideContents = splitContentIntoSlides(content, 5)
     
-    const newSlides = []
-    for (let i = 0; i < Math.max(slidesPerTemplate, 3); i++) {
-      const slideContent = contentLines.slice(i * 2, (i + 1) * 2).join('\n') || content
-      const slide = createSlideFromTemplate(template, i + 1, slideContent)
-      newSlides.push(slide)
-    }
+    // Create slides using the template with proper content distribution
+    const newSlides = slideContents.map((slideContent, index) => 
+      createSlideFromTemplate(template, index + 1, slideContent)
+    )
     
     setSlides(newSlides)
     toast({
       title: "Template applied",
-      description: `${template.name} template has been applied to your carousel`,
+      description: `${template.name} template has been applied to your carousel with ${newSlides.length} slides`,
     })
   }
 

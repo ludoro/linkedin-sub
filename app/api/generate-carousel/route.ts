@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { GoogleGenAI } from "@google/genai"
-import { carouselTemplates, createSlideFromTemplate } from "@/lib/templates"
+import { carouselTemplates, createSlideFromTemplate, splitContentIntoSlides } from "@/lib/templates"
 
 export async function POST(request: NextRequest) {
   try {
@@ -19,16 +19,13 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: "Template not found" }, { status: 404 })
       }
 
-      // Generate slides using template
-      const contentLines = content.split('\n').filter(line => line.trim())
-      const slidesPerTemplate = Math.max(Math.ceil(contentLines.length / 2), 3)
+      // Split the content intelligently into slides
+      const slideContents = splitContentIntoSlides(content, 5)
       
-      const slides = []
-      for (let i = 0; i < slidesPerTemplate; i++) {
-        const slideContent = contentLines.slice(i * 2, (i + 1) * 2).join('\n') || content
-        const slide = createSlideFromTemplate(template, i + 1, slideContent)
-        slides.push(slide)
-      }
+      // Create slides using the template with proper content distribution
+      const slides = slideContents.map((slideContent, index) => 
+        createSlideFromTemplate(template, index + 1, slideContent)
+      )
 
       return NextResponse.json({
         success: true,

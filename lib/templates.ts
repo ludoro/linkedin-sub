@@ -258,14 +258,12 @@ export const getTemplatesByCategory = (category: string): CarouselTemplate[] => 
   return carouselTemplates.filter(template => template.category === category)
 }
 
-export const createSlideFromTemplate = (template: CarouselTemplate, slideNumber: number, content: string): any => {
+export const createSlideFromTemplate = (template: CarouselTemplate, slideNumber: number, slideContent: { headline: string; content: string }): any => {
   const headlineElement = template.elements.find(el => el.id === 'headline')
   const contentElement = template.elements.find(el => el.id === 'content')
   
-  // Split content into headline and body
-  const lines = content.split('\n').filter(line => line.trim())
-  const headline = lines[0] || headlineElement?.content || 'Slide Title'
-  const body = lines.slice(1).join('\n') || contentElement?.content || 'Slide content goes here...'
+  const headline = slideContent.headline || headlineElement?.content || `Slide ${slideNumber} Title`
+  const body = slideContent.content || contentElement?.content || 'Slide content goes here...'
   
   return {
     slideNumber,
@@ -285,4 +283,70 @@ export const createSlideFromTemplate = (template: CarouselTemplate, slideNumber:
     })),
     customStyles: {}
   }
+}
+
+export const splitContentIntoSlides = (content: string, numSlides: number = 5): Array<{ headline: string; content: string }> => {
+  // Split content into sentences and paragraphs
+  const sentences = content.split(/[.!?]+/).filter(s => s.trim().length > 10)
+  const paragraphs = content.split('\n\n').filter(p => p.trim().length > 0)
+  
+  // If we have clear paragraphs, use those
+  if (paragraphs.length >= numSlides) {
+    return paragraphs.slice(0, numSlides).map((paragraph, index) => {
+      const lines = paragraph.split('\n').filter(line => line.trim())
+      const headline = lines[0]?.trim() || `Key Point ${index + 1}`
+      const body = lines.slice(1).join('\n').trim() || paragraph.trim()
+      return { headline, content: body }
+    })
+  }
+  
+  // If we have enough sentences, group them
+  if (sentences.length >= numSlides) {
+    const sentencesPerSlide = Math.ceil(sentences.length / numSlides)
+    const slides = []
+    
+    for (let i = 0; i < numSlides; i++) {
+      const slideStart = i * sentencesPerSlide
+      const slideEnd = Math.min(slideStart + sentencesPerSlide, sentences.length)
+      const slideSentences = sentences.slice(slideStart, slideEnd)
+      
+      if (slideSentences.length > 0) {
+        const firstSentence = slideSentences[0].trim()
+        const headline = firstSentence.length > 50 ? 
+          firstSentence.substring(0, 47) + '...' : 
+          firstSentence
+        const body = slideSentences.join('. ').trim() + '.'
+        
+        slides.push({ headline, content: body })
+      }
+    }
+    
+    return slides
+  }
+  
+  // Fallback: split by word count
+  const words = content.split(/\s+/)
+  const wordsPerSlide = Math.ceil(words.length / numSlides)
+  const slides = []
+  
+  for (let i = 0; i < numSlides; i++) {
+    const slideStart = i * wordsPerSlide
+    const slideEnd = Math.min(slideStart + wordsPerSlide, words.length)
+    const slideWords = words.slice(slideStart, slideEnd)
+    
+    if (slideWords.length > 0) {
+      const slideText = slideWords.join(' ')
+      const firstSentence = slideText.split(/[.!?]/)[0]
+      const headline = firstSentence.length > 50 ? 
+        firstSentence.substring(0, 47) + '...' : 
+        firstSentence
+      
+      slides.push({ 
+        headline: headline || `Slide ${i + 1}`, 
+        content: slideText 
+      })
+    }
+  }
+  
+  return slides
 }
