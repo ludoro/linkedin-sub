@@ -1,14 +1,40 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { GoogleGenAI } from "@google/genai"
+import { carouselTemplates, createSlideFromTemplate } from "@/lib/templates"
 
 export async function POST(request: NextRequest) {
   try {
     console.log("Carousel generation API called")
 
-    const { content, type } = await request.json()
+    const { content, type, templateId } = await request.json()
 
     if (!content) {
       return NextResponse.json({ error: "Content is required" }, { status: 400 })
+    }
+
+    // If templateId is provided, use template-based generation
+    if (templateId) {
+      const template = carouselTemplates.find(t => t.id === templateId)
+      if (!template) {
+        return NextResponse.json({ error: "Template not found" }, { status: 404 })
+      }
+
+      // Generate slides using template
+      const contentLines = content.split('\n').filter(line => line.trim())
+      const slidesPerTemplate = Math.max(Math.ceil(contentLines.length / 2), 3)
+      
+      const slides = []
+      for (let i = 0; i < slidesPerTemplate; i++) {
+        const slideContent = contentLines.slice(i * 2, (i + 1) * 2).join('\n') || content
+        const slide = createSlideFromTemplate(template, i + 1, slideContent)
+        slides.push(slide)
+      }
+
+      return NextResponse.json({
+        success: true,
+        slides: slides,
+        template: template
+      })
     }
 
     const apiKey = process.env.GEMINI_API_KEY

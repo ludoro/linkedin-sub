@@ -21,7 +21,7 @@ import {
   Layers,
 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
-import { InlineCarouselEditor } from "./inline-carousel-editor"
+import { TemplateCarouselEditor } from "./template-carousel-editor"
 
 interface ContentOutputProps {
   title: string
@@ -390,7 +390,7 @@ export function ContentOutput({ title, socialPost, newsletter, originalUrl }: Co
 
         {/* Social Media Carousel Editor */}
         {showCarouselEditor.social && carouselContent?.type === 'social' && (
-          <InlineCarouselEditor
+          <TemplateCarouselEditor
             content={carouselContent.content}
             contentType="social"
             onClose={() => closeCarouselEditor('social')}
@@ -557,7 +557,7 @@ export function ContentOutput({ title, socialPost, newsletter, originalUrl }: Co
 
         {/* Newsletter Carousel Editor */}
         {showCarouselEditor.newsletter && carouselContent?.type === 'newsletter' && (
-          <InlineCarouselEditor
+          <TemplateCarouselEditor
             content={carouselContent.content}
             contentType="newsletter"
             onClose={() => closeCarouselEditor('newsletter')}

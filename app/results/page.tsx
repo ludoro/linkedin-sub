@@ -82,7 +82,7 @@ export default function ResultsPage() {
   return (
     <main className="min-h-screen bg-background">
       <Header />
-      <div className="container mx-auto max-w-4xl px-4 py-8">
+      <div className="container mx-auto max-w-7xl px-4 py-8">
         <div className="mb-6">
           <Button 
             variant="outline" 
