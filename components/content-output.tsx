@@ -6,17 +6,20 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
 import {
   Copy,
   CheckCircle,
   Share2,
   Twitter,
   Linkedin,
-  Hash,
   ImageIcon,
   Loader2,
   ChevronDown,
   ChevronUp,
+  Edit3,
+  Save,
+  X,
 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 
@@ -40,6 +43,21 @@ export function ContentOutput({ title, socialPost, newsletter, originalUrl }: Co
     social: "",
     newsletter: "",
   })
+  
+  // Editing state management
+  const [isEditing, setIsEditing] = useState<{ social: boolean; newsletter: boolean }>({
+    social: false,
+    newsletter: false,
+  })
+  const [editedContent, setEditedContent] = useState<{ social: string; newsletter: string }>({
+    social: socialPost,
+    newsletter: newsletter,
+  })
+  const [originalContent, setOriginalContent] = useState<{ social: string; newsletter: string }>({
+    social: socialPost,
+    newsletter: newsletter,
+  })
+  
   const { toast } = useToast()
 
   const generateImage = async (content: string, type: "social" | "newsletter") => {
@@ -114,13 +132,15 @@ export function ContentOutput({ title, socialPost, newsletter, originalUrl }: Co
   }
 
 
-  const copyToClipboard = async (content: string, type: string) => {
+  const copyToClipboard = async (type: "social" | "newsletter") => {
+    const content = type === "social" ? currentSocialPost : currentNewsletter
+    const typeLabel = type === "social" ? "Social post" : "Newsletter"
     try {
       await navigator.clipboard.writeText(content)
-      setCopiedContent(type)
+      setCopiedContent(typeLabel)
       toast({
         title: "Copied to clipboard",
-        description: `${type} content copied successfully`,
+        description: `${typeLabel} content copied successfully`,
       })
       setTimeout(() => setCopiedContent(null), 2000)
     } catch (err) {
@@ -133,27 +153,46 @@ export function ContentOutput({ title, socialPost, newsletter, originalUrl }: Co
   }
 
   const shareToTwitter = () => {
-    const tweetText = encodeURIComponent(socialPost)
+    const tweetText = encodeURIComponent(currentSocialPost)
     const url = `https://twitter.com/intent/tweet?text=${tweetText}`
     window.open(url, "_blank")
   }
 
   const shareToLinkedIn = () => {
-    const text = encodeURIComponent(socialPost)
+    const text = encodeURIComponent(currentSocialPost)
     const url = encodeURIComponent(originalUrl)
     const titleParam = encodeURIComponent(title)
     const linkedinUrl = `https://www.linkedin.com/shareArticle?mini=true&url=${url}&title=${titleParam}&summary=${text}&source=LinkCraft`
     window.open(linkedinUrl, "_blank")
   }
 
-  const extractHashtags = (text: string) => {
-    const hashtags = text.match(/#\w+/g) || []
-    return hashtags
+  // Editing functions
+  const startEditing = (type: "social" | "newsletter") => {
+    setIsEditing((prev) => ({ ...prev, [type]: true }))
+    setOriginalContent((prev) => ({ ...prev, [type]: editedContent[type] }))
   }
 
-  const socialHashtags = extractHashtags(socialPost)
-  const socialWordCount = socialPost.split(" ").length
-  const newsletterWordCount = newsletter.split(" ").length
+  const cancelEditing = (type: "social" | "newsletter") => {
+    setIsEditing((prev) => ({ ...prev, [type]: false }))
+    setEditedContent((prev) => ({ ...prev, [type]: originalContent[type] }))
+  }
+
+  const saveEditing = (type: "social" | "newsletter") => {
+    setIsEditing((prev) => ({ ...prev, [type]: false }))
+    setOriginalContent((prev) => ({ ...prev, [type]: editedContent[type] }))
+    toast({
+      title: "Content updated",
+      description: `${type === "social" ? "Social post" : "Newsletter"} has been saved`,
+    })
+  }
+
+  const handleContentChange = (type: "social" | "newsletter", value: string) => {
+    setEditedContent((prev) => ({ ...prev, [type]: value }))
+  }
+
+  // Use edited content for display
+  const currentSocialPost = editedContent.social
+  const currentNewsletter = editedContent.newsletter
 
   return (
     <>
@@ -207,30 +246,41 @@ export function ContentOutput({ title, socialPost, newsletter, originalUrl }: Co
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex items-center gap-4 text-sm text-muted-foreground">
-              <span>{socialPost.length} characters</span>
-              <span>{socialWordCount} words</span>
-              {socialHashtags.length > 0 && (
-                <div className="flex items-center gap-1">
-                  <Hash className="h-3 w-3" />
-                  <span>{socialHashtags.length} hashtags</span>
+
+            {isEditing.social ? (
+              <div className="space-y-3">
+                <Textarea
+                  value={editedContent.social}
+                  onChange={(e) => handleContentChange("social", e.target.value)}
+                  className="min-h-[100px] text-sm leading-relaxed"
+                  placeholder="Enter your social media post..."
+                />
+                <div className="flex items-center gap-2">
+                  <Button
+                    size="sm"
+                    onClick={() => saveEditing("social")}
+                    className="flex items-center gap-2"
+                  >
+                    <Save className="h-4 w-4" />
+                    Save
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => cancelEditing("social")}
+                    className="flex items-center gap-2"
+                  >
+                    <X className="h-4 w-4" />
+                    Cancel
+                  </Button>
                 </div>
-              )}
-            </div>
-
-            <div className="p-4 bg-muted rounded-lg border-l-4 border-l-primary">
-              <p className="whitespace-pre-wrap text-sm leading-relaxed">{socialPost}</p>
-            </div>
-
-            {socialHashtags.length > 0 && (
-              <div className="flex flex-wrap gap-2">
-                {socialHashtags.map((hashtag, index) => (
-                  <Badge key={index} variant="secondary" className="text-xs">
-                    {hashtag}
-                  </Badge>
-                ))}
+              </div>
+            ) : (
+              <div className="p-4 bg-muted rounded-lg border-l-4 border-l-primary">
+                <p className="whitespace-pre-wrap text-sm leading-relaxed">{currentSocialPost}</p>
               </div>
             )}
+
 
             {generatedImages.social && (
               <div className="space-y-2">
@@ -270,7 +320,7 @@ export function ContentOutput({ title, socialPost, newsletter, originalUrl }: Co
                 <div className="flex gap-2">
                   <Button
                     size="sm"
-                    onClick={() => generateImage(socialPost, "social")}
+                    onClick={() => generateImage(currentSocialPost, "social")}
                     disabled={generatingImage === "social"}
                     className="flex items-center gap-2"
                   >
@@ -295,10 +345,21 @@ export function ContentOutput({ title, socialPost, newsletter, originalUrl }: Co
             <Separator />
 
             <div className="flex items-center gap-2">
+              {!isEditing.social && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => startEditing("social")}
+                  className="flex items-center gap-2"
+                >
+                  <Edit3 className="h-4 w-4" />
+                  Edit
+                </Button>
+              )}
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => copyToClipboard(socialPost, "Social post")}
+                onClick={() => copyToClipboard("social")}
                 className="flex items-center gap-2"
               >
                 {copiedContent === "Social post" ? <CheckCircle className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
@@ -333,17 +394,42 @@ export function ContentOutput({ title, socialPost, newsletter, originalUrl }: Co
             <CardTitle className="flex items-center gap-2 text-lg">Newsletter Article</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex items-center gap-4 text-sm text-muted-foreground">
-              <span>{newsletterWordCount} words</span>
-              <span>~{Math.ceil(newsletterWordCount / 200)} min read</span>
-              <Badge variant="secondary">Newsletter Ready</Badge>
-            </div>
 
-            <div className="p-6 bg-muted rounded-lg">
-              <div className="prose prose-sm max-w-none dark:prose-invert">
-                <div className="whitespace-pre-wrap leading-relaxed">{newsletter}</div>
+            {isEditing.newsletter ? (
+              <div className="space-y-3">
+                <Textarea
+                  value={editedContent.newsletter}
+                  onChange={(e) => handleContentChange("newsletter", e.target.value)}
+                  className="min-h-[200px] text-sm leading-relaxed"
+                  placeholder="Enter your newsletter content..."
+                />
+                <div className="flex items-center gap-2">
+                  <Button
+                    size="sm"
+                    onClick={() => saveEditing("newsletter")}
+                    className="flex items-center gap-2"
+                  >
+                    <Save className="h-4 w-4" />
+                    Save
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => cancelEditing("newsletter")}
+                    className="flex items-center gap-2"
+                  >
+                    <X className="h-4 w-4" />
+                    Cancel
+                  </Button>
+                </div>
               </div>
-            </div>
+            ) : (
+              <div className="p-6 bg-muted rounded-lg">
+                <div className="prose prose-sm max-w-none dark:prose-invert">
+                  <div className="whitespace-pre-wrap leading-relaxed">{currentNewsletter}</div>
+                </div>
+              </div>
+            )}
 
             {generatedImages.newsletter && (
               <div className="space-y-2">
@@ -383,7 +469,7 @@ export function ContentOutput({ title, socialPost, newsletter, originalUrl }: Co
                 <div className="flex gap-2">
                   <Button
                     size="sm"
-                    onClick={() => generateImage(newsletter, "newsletter")}
+                    onClick={() => generateImage(currentNewsletter, "newsletter")}
                     disabled={generatingImage === "newsletter"}
                     className="flex items-center gap-2"
                   >
@@ -408,10 +494,21 @@ export function ContentOutput({ title, socialPost, newsletter, originalUrl }: Co
             <Separator />
 
             <div className="flex items-center gap-2">
+              {!isEditing.newsletter && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => startEditing("newsletter")}
+                  className="flex items-center gap-2"
+                >
+                  <Edit3 className="h-4 w-4" />
+                  Edit
+                </Button>
+              )}
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => copyToClipboard(newsletter, "Newsletter")}
+                onClick={() => copyToClipboard("newsletter")}
                 className="flex items-center gap-2"
               >
                 {copiedContent === "Newsletter" ? <CheckCircle className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
