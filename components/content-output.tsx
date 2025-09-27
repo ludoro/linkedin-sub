@@ -284,26 +284,6 @@ export function ContentOutput({ title, socialPost, newsletter, originalUrl }: Co
   return (
     <>
       <div className="space-y-6">
-        {/* Header with title and actions */}
-        <Card>
-          <CardHeader>
-            <div className="flex items-start justify-between">
-              <div className="space-y-2">
-                <CardTitle className="text-xl">{title}</CardTitle>
-                {originalUrl && (
-                  <p className="text-sm text-muted-foreground">
-                    Generated from: <span className="font-mono text-xs">{originalUrl}</span>
-                  </p>
-                )}
-              </div>
-              <Badge variant="outline" className="bg-green-500/10 text-green-500 border-green-500/20">
-                <CheckCircle className="h-3 w-3 mr-1" />
-                Generated
-              </Badge>
-            </div>
-          </CardHeader>
-        </Card>
-
         {/* Social Media Post */}
         <Card>
           <CardHeader>
