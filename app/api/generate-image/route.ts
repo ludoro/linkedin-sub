@@ -24,16 +24,19 @@ export async function POST(request: NextRequest) {
     })
 
     // Create a detailed image generation prompt
-    const imagePrompt = `Create a visually appealing ${type === "social" ? "social media" : "newsletter"} image for the following content: ${prompt}. 
-    
-    Style requirements:
+    // The prompt already contains the user's additional content at the top, followed by the main content
+    const imagePrompt = `Create a visually appealing ${type === "social" ? "social media" : "newsletter"} image based on the following requirements and content:
+
+    ${prompt}
+
+    Additional style requirements:
     - Modern, professional design
     - High contrast and readable
-    - Suitable for ${type === "social" ? "social media platforms" : "newsletter headers"}
+    - Suitable for social media platforms
     - Clean typography if text is included
     - Engaging visual elements
-    - ${type === "social" ? "Square or landscape format" : "Banner format"}
-    
+    - Square or landscape format
+
     Generate an image that would complement this content perfectly.`
 
     const response = await ai.models.generateContent({
@@ -43,17 +46,20 @@ export async function POST(request: NextRequest) {
 
     console.log("Image generation response received")
 
-    for (const part of response.candidates[0].content.parts) {
-      if (part.inlineData) {
-        const imageData = part.inlineData.data
-        console.log("Image data received, length:", imageData.length)
+    // Check if we have valid response structure
+    if (response.candidates && response.candidates[0] && response.candidates[0].content && response.candidates[0].content.parts) {
+      for (const part of response.candidates[0].content.parts) {
+        if (part.inlineData && part.inlineData.data) {
+          const imageData = part.inlineData.data
+          console.log("Image data received, length:", imageData.length)
 
-        // Return the base64 image data
-        return NextResponse.json({
-          success: true,
-          imageUrl: `data:image/png;base64,${imageData}`,
-          message: "Image generated successfully!",
-        })
+          // Return the base64 image data
+          return NextResponse.json({
+            success: true,
+            imageUrl: `data:image/png;base64,${imageData}`,
+            message: "Image generated successfully!",
+          })
+        }
       }
     }
 

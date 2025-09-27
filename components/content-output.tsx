@@ -27,7 +27,7 @@ interface ContentOutputProps {
   title: string
   socialPost: string
   newsletter: string
-  originalUrl: string
+  originalUrl?: string
 }
 
 
@@ -68,7 +68,8 @@ export function ContentOutput({ title, socialPost, newsletter, originalUrl }: Co
       let finalPrompt = content
 
       if (customPrompt.trim()) {
-        finalPrompt = `${content}\n\nAdditional style requirements: ${customPrompt}`
+        // Put additional content on top of the main text
+        finalPrompt = `${customPrompt}\n\n${content}`
       }
 
       const response = await fetch("/api/generate-image", {
@@ -158,12 +159,45 @@ export function ContentOutput({ title, socialPost, newsletter, originalUrl }: Co
     window.open(url, "_blank")
   }
 
-  const shareToLinkedIn = () => {
-    const text = encodeURIComponent(currentSocialPost)
-    const url = encodeURIComponent(originalUrl)
-    const titleParam = encodeURIComponent(title)
-    const linkedinUrl = `https://www.linkedin.com/shareArticle?mini=true&url=${url}&title=${titleParam}&summary=${text}&source=LinkCraft`
-    window.open(linkedinUrl, "_blank")
+  const shareToLinkedIn = async () => {
+    // LinkedIn doesn't support pre-populating text, so we copy the text to clipboard
+    // and open LinkedIn with a simple share URL, then show instructions
+    try {
+      await navigator.clipboard.writeText(currentSocialPost)
+      
+      if (originalUrl) {
+        // Open LinkedIn share dialog with the original URL
+        const linkedinUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(originalUrl)}`
+        window.open(linkedinUrl, "_blank")
+        
+        // Show toast with instructions
+        toast({
+          title: "Text copied to clipboard",
+          description: "Paste the text in the LinkedIn post dialog. LinkedIn doesn't support pre-filled text.",
+        })
+      } else {
+        // No original URL, just open LinkedIn compose
+        const linkedinUrl = "https://www.linkedin.com/feed/"
+        window.open(linkedinUrl, "_blank")
+        
+        toast({
+          title: "Text copied to clipboard",
+          description: "Paste the text in the LinkedIn post dialog. LinkedIn doesn't support pre-filled text.",
+        })
+      }
+    } catch (err) {
+      // Fallback: just open LinkedIn without copying
+      const linkedinUrl = originalUrl 
+        ? `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(originalUrl)}`
+        : "https://www.linkedin.com/feed/"
+      window.open(linkedinUrl, "_blank")
+      
+      toast({
+        title: "LinkedIn opened",
+        description: "LinkedIn doesn't support pre-filled text. You'll need to type your message manually.",
+        variant: "default",
+      })
+    }
   }
 
   // Editing functions
@@ -203,9 +237,11 @@ export function ContentOutput({ title, socialPost, newsletter, originalUrl }: Co
             <div className="flex items-start justify-between">
               <div className="space-y-2">
                 <CardTitle className="text-xl">{title}</CardTitle>
-                <p className="text-sm text-muted-foreground">
-                  Generated from: <span className="font-mono text-xs">{originalUrl}</span>
-                </p>
+                {originalUrl && (
+                  <p className="text-sm text-muted-foreground">
+                    Generated from: <span className="font-mono text-xs">{originalUrl}</span>
+                  </p>
+                )}
               </div>
               <Badge variant="outline" className="bg-green-500/10 text-green-500 border-green-500/20">
                 <CheckCircle className="h-3 w-3 mr-1" />
@@ -308,7 +344,7 @@ export function ContentOutput({ title, socialPost, newsletter, originalUrl }: Co
                 </div>
                 <div className="space-y-2">
                   <label className="text-xs text-muted-foreground">
-                    Describe the image you want (optional - leave blank to use post content)
+                    Describe the image you want (optional - this will be added on top of the post content)
                   </label>
                   <Input
                     placeholder="e.g., Modern minimalist design, bright colors, include tech elements..."
@@ -457,7 +493,7 @@ export function ContentOutput({ title, socialPost, newsletter, originalUrl }: Co
                 </div>
                 <div className="space-y-2">
                   <label className="text-xs text-muted-foreground">
-                    Describe the image you want (optional - leave blank to use article content)
+                    Describe the image you want (optional - this will be added on top of the article content)
                   </label>
                   <Input
                     placeholder="e.g., Professional header image, corporate style, relevant to article topic..."

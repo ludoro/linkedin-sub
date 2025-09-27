@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Link, Loader2, AlertCircle, Type } from "lucide-react"
+import { Link, Loader2, AlertCircle, Type, FileText, Globe } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { ContentOutput } from "./content-output"
 
@@ -23,7 +23,9 @@ interface LinkConverterProps {
 }
 
 export function LinkConverter({ onContentGenerated }: LinkConverterProps) {
+  const [inputMode, setInputMode] = useState<"url" | "text">("url")
   const [url, setUrl] = useState("")
+  const [articleText, setArticleText] = useState("")
   const [textPrompt, setTextPrompt] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [result, setResult] = useState<ConversionResult | null>(null)
@@ -40,18 +42,26 @@ export function LinkConverter({ onContentGenerated }: LinkConverterProps) {
   }
 
   const handleConvert = async () => {
-    console.log("Convert button clicked, URL:", url)
+    console.log("Convert button clicked, mode:", inputMode)
 
-    if (!url) {
-      console.log("No URL provided")
-      setError("Please enter a URL")
-      return
-    }
+    if (inputMode === "url") {
+      if (!url) {
+        console.log("No URL provided")
+        setError("Please enter a URL")
+        return
+      }
 
-    if (!isValidUrl(url)) {
-      console.log("Invalid URL provided:", url)
-      setError("Please enter a valid URL")
-      return
+      if (!isValidUrl(url)) {
+        console.log("Invalid URL provided:", url)
+        setError("Please enter a valid URL")
+        return
+      }
+    } else {
+      if (!articleText.trim()) {
+        console.log("No article text provided")
+        setError("Please enter article text")
+        return
+      }
     }
 
     console.log("Starting conversion process")
@@ -61,12 +71,16 @@ export function LinkConverter({ onContentGenerated }: LinkConverterProps) {
 
     try {
       console.log("Making API request to /api/convert")
+      const requestBody = inputMode === "url" 
+        ? { url, textPrompt, mode: "url" }
+        : { articleText, textPrompt, mode: "text" }
+
       const response = await fetch("/api/convert", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ url, textPrompt }),
+        body: JSON.stringify(requestBody),
       })
 
       console.log("API response status:", response.status)
@@ -74,7 +88,7 @@ export function LinkConverter({ onContentGenerated }: LinkConverterProps) {
       if (!response.ok) {
         const errorData = await response.json()
         console.log("API error response:", errorData)
-        throw new Error(errorData.error || "Failed to convert link")
+        throw new Error(errorData.error || "Failed to convert content")
       }
 
       const data = await response.json()
@@ -109,6 +123,7 @@ export function LinkConverter({ onContentGenerated }: LinkConverterProps) {
   const handleNewConversion = () => {
     setResult(null)
     setUrl("")
+    setArticleText("")
     setTextPrompt("")
     setError(null)
     onContentGenerated?.(false)
@@ -121,17 +136,50 @@ export function LinkConverter({ onContentGenerated }: LinkConverterProps) {
           <>
             <div className="text-center mb-6">
               <h2 className="text-3xl font-bold mb-4">Try It Now</h2>
-              <p className="text-muted-foreground">Paste any link and watch AI transform it into engaging content</p>
+              <p className="text-muted-foreground">
+                {inputMode === "url" 
+                  ? "Paste any link and watch AI transform it into engaging content"
+                  : "Paste your article text and watch AI transform it into engaging content"
+                }
+              </p>
             </div>
 
             <Card className="mb-6">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Link className="h-5 w-5" />
-                  Link to Content Converter
+                  {inputMode === "url" ? <Link className="h-5 w-5" /> : <FileText className="h-5 w-5" />}
+                  {inputMode === "url" ? "Link to Content Converter" : "Text to Content Converter"}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
+                {/* Input Mode Toggle */}
+                <div className="flex items-center gap-2 mb-4">
+                  <Button
+                    variant={inputMode === "url" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => {
+                      setInputMode("url")
+                      setError(null)
+                    }}
+                    className="flex items-center gap-2"
+                  >
+                    <Globe className="h-4 w-4" />
+                    URL
+                  </Button>
+                  <Button
+                    variant={inputMode === "text" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => {
+                      setInputMode("text")
+                      setError(null)
+                    }}
+                    className="flex items-center gap-2"
+                  >
+                    <FileText className="h-4 w-4" />
+                    Text
+                  </Button>
+                </div>
+
                 <div className="space-y-2">
                   <label className="text-sm font-medium flex items-center gap-2">
                     <Type className="h-4 w-4" />
@@ -146,36 +194,71 @@ export function LinkConverter({ onContentGenerated }: LinkConverterProps) {
                   />
                 </div>
 
-                <div className="flex gap-2">
-                  <Input
-                    placeholder="https://example.com/article"
-                    value={url}
-                    onChange={(e) => {
-                      setUrl(e.target.value)
-                      setError(null)
-                    }}
-                    onKeyPress={handleKeyPress}
-                    className="flex-1"
-                    disabled={isLoading}
-                  />
-                  <Button
-                    onClick={() => {
-                      console.log("Button clicked!")
-                      handleConvert()
-                    }}
-                    disabled={!url || isLoading || !isValidUrl(url)}
-                    className="min-w-[120px]"
-                  >
-                    {isLoading ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Converting
-                      </>
-                    ) : (
-                      "Convert"
-                    )}
-                  </Button>
-                </div>
+                {inputMode === "url" ? (
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="https://example.com/article"
+                      value={url}
+                      onChange={(e) => {
+                        setUrl(e.target.value)
+                        setError(null)
+                      }}
+                      onKeyPress={handleKeyPress}
+                      className="flex-1"
+                      disabled={isLoading}
+                    />
+                    <Button
+                      onClick={() => {
+                        console.log("Button clicked!")
+                        handleConvert()
+                      }}
+                      disabled={!url || isLoading || !isValidUrl(url)}
+                      className="min-w-[120px]"
+                    >
+                      {isLoading ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Converting
+                        </>
+                      ) : (
+                        "Convert"
+                      )}
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">
+                      Article Text
+                    </label>
+                    <Textarea
+                      placeholder="Paste your article text here..."
+                      value={articleText}
+                      onChange={(e) => {
+                        setArticleText(e.target.value)
+                        setError(null)
+                      }}
+                      className="min-h-[200px]"
+                      disabled={isLoading}
+                    />
+                    <Button
+                      onClick={() => {
+                        console.log("Button clicked!")
+                        handleConvert()
+                      }}
+                      disabled={!articleText.trim() || isLoading}
+                      className="w-full"
+                    >
+                      {isLoading ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Converting
+                        </>
+                      ) : (
+                        "Convert"
+                      )}
+                    </Button>
+                  </div>
+                )}
 
                 {error && (
                   <Alert variant="destructive">
@@ -191,7 +274,7 @@ export function LinkConverter({ onContentGenerated }: LinkConverterProps) {
             <div className="mb-6 flex items-center justify-between">
               <h2 className="text-2xl font-bold">Generated Content</h2>
               <Button variant="outline" onClick={handleNewConversion}>
-                Convert Another Link
+                Convert Another {inputMode === "url" ? "Link" : "Article"}
               </Button>
             </div>
 
@@ -199,7 +282,7 @@ export function LinkConverter({ onContentGenerated }: LinkConverterProps) {
               title={result.title}
               socialPost={result.socialPost}
               newsletter={result.newsletter}
-              originalUrl={url}
+              originalUrl={inputMode === "url" ? url : undefined}
             />
           </>
         )}
