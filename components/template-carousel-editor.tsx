@@ -90,6 +90,16 @@ export function TemplateCarouselEditor({ content, contentType, onClose }: Templa
     }
   }, [content])
 
+  // Auto-select Modern Social template when component mounts
+  useEffect(() => {
+    if (!selectedTemplate) {
+      const modernSocialTemplate = getTemplateById('social-modern')
+      if (modernSocialTemplate) {
+        setSelectedTemplate(modernSocialTemplate)
+      }
+    }
+  }, [selectedTemplate])
+
   const generateCarousel = async () => {
     setIsGenerating(true)
     try {
@@ -108,6 +118,20 @@ export function TemplateCarouselEditor({ content, contentType, onClose }: Templa
 
       if (data.success) {
         setSlides(data.slides)
+        
+        // Auto-apply Modern Social template to generated slides
+        const modernSocialTemplate = getTemplateById('social-modern')
+        if (modernSocialTemplate && data.slides.length > 0) {
+          setSelectedTemplate(modernSocialTemplate)
+          const templatedSlides = data.slides.map((slide: any, index: number) => 
+            createSlideFromTemplate(modernSocialTemplate, index + 1, {
+              headline: slide.headline,
+              content: slide.content
+            })
+          )
+          setSlides(templatedSlides)
+        }
+        
         toast({
           title: "Carousel generated",
           description: "Your carousel slides have been created successfully",
@@ -565,14 +589,16 @@ export function TemplateCarouselEditor({ content, contentType, onClose }: Templa
                 margin: `${element.style.margin || 0}px`,
                 cursor: element.editable ? 'pointer' : 'default'
               }}
-                onClick={() => {
-                  if (element.editable && !isEditing) {
+              onClick={() => {
+                if (element.editable) {
+                  if (!isEditing) {
                     startEditing(currentSlide)
                     setTimeout(() => startElementEditing(element), 100)
-                  } else if (element.editable && isEditing) {
+                  } else {
                     startElementEditing(element)
                   }
-                }}
+                }
+              }}
             >
               {element.type === 'text' ? (
                 <span className={element.editable ? 'hover:bg-blue-100 hover:shadow-sm rounded px-2 py-1 transition-all duration-200 border-2 border-transparent hover:border-blue-200' : ''}>
@@ -795,7 +821,7 @@ export function TemplateCarouselEditor({ content, contentType, onClose }: Templa
                         <Edit3 className="h-4 w-4" />
                         Edit
                       </Button>
-                    ) : (
+                    ) : !editingElement ? (
                       <div className="flex gap-2">
                         <Button
                           size="sm"
@@ -815,7 +841,7 @@ export function TemplateCarouselEditor({ content, contentType, onClose }: Templa
                           Cancel
                         </Button>
                       </div>
-                    )}
+                    ) : null}
                   </div>
                 </CardHeader>
                 <CardContent>
