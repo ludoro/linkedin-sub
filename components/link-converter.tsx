@@ -40,27 +40,27 @@ export function LinkConverter({ onContentGenerated }: LinkConverterProps) {
   }
 
   const handleConvert = async () => {
-    console.log("[v0] Convert button clicked, URL:", url)
+    console.log("Convert button clicked, URL:", url)
 
     if (!url) {
-      console.log("[v0] No URL provided")
+      console.log("No URL provided")
       setError("Please enter a URL")
       return
     }
 
     if (!isValidUrl(url)) {
-      console.log("[v0] Invalid URL provided:", url)
+      console.log("Invalid URL provided:", url)
       setError("Please enter a valid URL")
       return
     }
 
-    console.log("[v0] Starting conversion process")
+    console.log("Starting conversion process")
     setIsLoading(true)
     setError(null)
     setResult(null)
 
     try {
-      console.log("[v0] Making API request to /api/convert")
+      console.log("Making API request to /api/convert")
       const response = await fetch("/api/convert", {
         method: "POST",
         headers: {
@@ -69,16 +69,16 @@ export function LinkConverter({ onContentGenerated }: LinkConverterProps) {
         body: JSON.stringify({ url, textPrompt }),
       })
 
-      console.log("[v0] API response status:", response.status)
+      console.log("API response status:", response.status)
 
       if (!response.ok) {
         const errorData = await response.json()
-        console.log("[v0] API error response:", errorData)
+        console.log("API error response:", errorData)
         throw new Error(errorData.error || "Failed to convert link")
       }
 
       const data = await response.json()
-      console.log("[v0] API success response:", data)
+      console.log("API success response:", data)
       setResult(data)
       onContentGenerated?.(true)
       toast({
@@ -86,7 +86,7 @@ export function LinkConverter({ onContentGenerated }: LinkConverterProps) {
         description: "Your content has been generated successfully",
       })
     } catch (error) {
-      console.log("[v0] Conversion error:", error)
+      console.log("Conversion error:", error)
       const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred"
       setError(errorMessage)
       toast({
@@ -95,7 +95,7 @@ export function LinkConverter({ onContentGenerated }: LinkConverterProps) {
         variant: "destructive",
       })
     } finally {
-      console.log("[v0] Conversion process completed")
+      console.log("Conversion process completed")
       setIsLoading(false)
     }
   }
@@ -160,7 +160,7 @@ export function LinkConverter({ onContentGenerated }: LinkConverterProps) {
                   />
                   <Button
                     onClick={() => {
-                      console.log("[v0] Button clicked!")
+                      console.log("Button clicked!")
                       handleConvert()
                     }}
                     disabled={!url || isLoading || !isValidUrl(url)}

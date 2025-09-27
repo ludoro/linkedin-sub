@@ -63,7 +63,7 @@ export function ContentOutput({ title, socialPost, newsletter, originalUrl }: Co
   const generateImage = async (content: string, type: "social" | "newsletter") => {
     setGeneratingImage(type)
     try {
-      console.log("[v0] Generating image for:", type)
+      console.log("Generating image for:", type)
       const customPrompt = imagePrompts[type]
       let finalPrompt = content
 
@@ -120,7 +120,7 @@ export function ContentOutput({ title, socialPost, newsletter, originalUrl }: Co
         })
       }
     } catch (error: any) {
-      console.error("[v0] Image generation error:", error)
+      console.error("Image generation error:", error)
       toast({
         title: "Network error",
         description: "Could not connect to image generation service",

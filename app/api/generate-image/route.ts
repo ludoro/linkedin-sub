@@ -3,7 +3,7 @@ import { GoogleGenAI } from "@google/genai"
 
 export async function POST(request: NextRequest) {
   try {
-    console.log("[v0] Image generation API called")
+    console.log("Image generation API called")
 
     const { prompt, type } = await request.json()
 
@@ -13,11 +13,11 @@ export async function POST(request: NextRequest) {
 
     const apiKey = process.env.GEMINI_API_KEY
     if (!apiKey) {
-      console.log("[v0] GEMINI_API_KEY not found")
+      console.log("GEMINI_API_KEY not found")
       return NextResponse.json({ error: "API key not configured" }, { status: 500 })
     }
 
-    console.log("[v0] Generating image with Gemini...")
+    console.log("Generating image with Gemini...")
 
     const ai = new GoogleGenAI({
       apiKey: apiKey,
@@ -41,12 +41,12 @@ export async function POST(request: NextRequest) {
       contents: imagePrompt,
     })
 
-    console.log("[v0] Image generation response received")
+    console.log("Image generation response received")
 
     for (const part of response.candidates[0].content.parts) {
       if (part.inlineData) {
         const imageData = part.inlineData.data
-        console.log("[v0] Image data received, length:", imageData.length)
+        console.log("Image data received, length:", imageData.length)
 
         // Return the base64 image data
         return NextResponse.json({
@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
       imageUrl: null,
     })
   } catch (error: any) {
-    console.error("[v0] Image generation failed:", error)
+    console.error("Image generation failed:", error)
 
     let errorMessage = "Failed to generate image"
     let userMessage = "Could not generate image. Please try again later."

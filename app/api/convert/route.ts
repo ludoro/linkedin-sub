@@ -41,24 +41,24 @@ function extractTitle(html: string): string {
 
 export async function POST(request: NextRequest) {
   try {
-    console.log("[v0] API route called")
+    console.log("API route called")
     const { url, textPrompt } = await request.json()
-    console.log("[v0] URL received:", url)
-    console.log("[v0] Text prompt:", textPrompt)
+    console.log("URL received:", url)
+    console.log("Text prompt:", textPrompt)
 
     if (!url) {
-      console.log("[v0] No URL provided")
+      console.log("No URL provided")
       return NextResponse.json({ error: "URL is required" }, { status: 400 })
     }
 
     try {
       new URL(url)
     } catch {
-      console.log("[v0] Invalid URL format:", url)
+      console.log("Invalid URL format:", url)
       return NextResponse.json({ error: "Invalid URL format" }, { status: 400 })
     }
 
-    console.log("[v0] Fetching webpage content...")
+    console.log("Fetching webpage content...")
     const controller = new AbortController()
     const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 second timeout
 
@@ -73,7 +73,7 @@ export async function POST(request: NextRequest) {
     clearTimeout(timeoutId)
 
     if (!response.ok) {
-      console.log("[v0] Failed to fetch webpage:", response.status, response.statusText)
+      console.log("Failed to fetch webpage:", response.status, response.statusText)
       return NextResponse.json(
         {
           error: `Failed to fetch webpage: ${response.status} ${response.statusText}`,
@@ -82,17 +82,17 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    console.log("[v0] Webpage fetched successfully")
+    console.log("Webpage fetched successfully")
     const html = await response.text()
 
     const textContent = extractContentFromHtml(html)
     const title = extractTitle(html)
 
-    console.log("[v0] Extracted title:", title)
-    console.log("[v0] Content length:", textContent.length)
+    console.log("Extracted title:", title)
+    console.log("Content length:", textContent.length)
 
     if (!textContent || textContent.length < 100) {
-      console.log("[v0] Insufficient content extracted")
+      console.log("Insufficient content extracted")
       return NextResponse.json(
         {
           error: "Could not extract sufficient content from the webpage",
@@ -102,7 +102,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (!process.env.GEMINI_API_KEY) {
-      console.log("[v0] Missing GEMINI_API_KEY")
+      console.log("Missing GEMINI_API_KEY")
       return NextResponse.json(
         {
           error: "AI service not configured. Please check your API key.",
@@ -111,7 +111,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    console.log("[v0] Generating content with Gemini...")
+    console.log("Generating content with Gemini...")
     const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" })
 
     const socialPrompt = `
@@ -147,17 +147,17 @@ export async function POST(request: NextRequest) {
 
     const [socialResult, newsletterResult] = await Promise.all([
       model.generateContent(socialPrompt).catch((err) => {
-        console.error("[v0] Social post generation failed:", err)
+        console.error("Social post generation failed:", err)
         return null
       }),
       model.generateContent(newsletterPrompt).catch((err) => {
-        console.error("[v0] Newsletter generation failed:", err)
+        console.error("Newsletter generation failed:", err)
         return null
       }),
     ])
 
     if (!socialResult || !newsletterResult) {
-      console.log("[v0] AI generation failed")
+      console.log("AI generation failed")
       return NextResponse.json(
         {
           error: "Failed to generate content with AI",
@@ -169,9 +169,9 @@ export async function POST(request: NextRequest) {
     const socialPost = socialResult.response.text().trim()
     const newsletter = newsletterResult.response.text().trim()
 
-    console.log("[v0] Content generated successfully")
-    console.log("[v0] Social post length:", socialPost.length)
-    console.log("[v0] Newsletter length:", newsletter.length)
+    console.log("Content generated successfully")
+    console.log("Social post length:", socialPost.length)
+    console.log("Newsletter length:", newsletter.length)
 
     return NextResponse.json({
       title,
@@ -179,7 +179,7 @@ export async function POST(request: NextRequest) {
       newsletter,
     })
   } catch (error) {
-    console.error("[v0] Error converting content:", error)
+    console.error("Error converting content:", error)
     return NextResponse.json({ error: "Failed to convert content. Please try again." }, { status: 500 })
   }
 }
