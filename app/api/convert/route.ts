@@ -1,43 +1,8 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { GoogleGenerativeAI } from "@google/generative-ai"
+import { GoogleGenAI } from "@google/genai"
 
 // Initialize Gemini AI
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!)
-
-function extractContentFromHtml(html: string) {
-  // Remove script and style tags
-  let content = html
-    .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "")
-    .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "")
-    .replace(/<nav[^>]*>[\s\S]*?<\/nav>/gi, "")
-    .replace(/<header[^>]*>[\s\S]*?<\/header>/gi, "")
-    .replace(/<footer[^>]*>[\s\S]*?<\/footer>/gi, "")
-
-  // Extract main content areas
-  const mainContent =
-    content.match(/<main[^>]*>([\s\S]*?)<\/main>/i) ||
-    content.match(/<article[^>]*>([\s\S]*?)<\/article>/i) ||
-    content.match(/<div[^>]*class="[^"]*content[^"]*"[^>]*>([\s\S]*?)<\/div>/i)
-
-  if (mainContent) {
-    content = mainContent[1]
-  }
-
-  // Clean HTML tags and normalize whitespace
-  return content
-    .replace(/<[^>]*>/g, " ")
-    .replace(/\s+/g, " ")
-    .trim()
-    .substring(0, 8000) // Increased limit for better context
-}
-
-function extractTitle(html: string): string {
-  const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i)
-  const h1Match = html.match(/<h1[^>]*>([^<]+)<\/h1>/i)
-  const ogTitleMatch = html.match(/<meta[^>]*property="og:title"[^>]*content="([^"]+)"/i)
-
-  return (ogTitleMatch?.[1] || titleMatch?.[1] || h1Match?.[1] || "Untitled").trim()
-}
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! })
 
 export async function POST(request: NextRequest) {
   try {
@@ -58,49 +23,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Invalid URL format" }, { status: 400 })
     }
 
-    console.log("Fetching webpage content...")
-    const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 second timeout
-
-    const response = await fetch(url, {
-      headers: {
-        "User-Agent": "Mozilla/5.0 (compatible; LinkCraft/1.0; +https://linkcraft.ai)",
-        Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-      },
-      signal: controller.signal,
-    })
-
-    clearTimeout(timeoutId)
-
-    if (!response.ok) {
-      console.log("Failed to fetch webpage:", response.status, response.statusText)
-      return NextResponse.json(
-        {
-          error: `Failed to fetch webpage: ${response.status} ${response.statusText}`,
-        },
-        { status: 400 },
-      )
-    }
-
-    console.log("Webpage fetched successfully")
-    const html = await response.text()
-
-    const textContent = extractContentFromHtml(html)
-    const title = extractTitle(html)
-
-    console.log("Extracted title:", title)
-    console.log("Content length:", textContent.length)
-
-    if (!textContent || textContent.length < 100) {
-      console.log("Insufficient content extracted")
-      return NextResponse.json(
-        {
-          error: "Could not extract sufficient content from the webpage",
-        },
-        { status: 400 },
-      )
-    }
-
     if (!process.env.GEMINI_API_KEY) {
       console.log("Missing GEMINI_API_KEY")
       return NextResponse.json(
@@ -111,11 +33,9 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    console.log("Generating content with Gemini...")
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" })
+    console.log("Generating content with Gemini using URL context...")
 
-    const socialPrompt = `
-    Create an engaging social media post from this webpage content. Requirements:
+    const socialPrompt = `Create an engaging social media post from the content at ${url}. Requirements:
     - Keep it under 280 characters
     - Make it compelling and shareable
     - Include 2-3 relevant hashtags
@@ -123,14 +43,9 @@ export async function POST(request: NextRequest) {
     - Use an engaging hook or question if appropriate
     ${textPrompt ? `- Additional style requirements: ${textPrompt}` : ""}
     
-    Title: ${title}
-    Content: ${textContent}
-    
-    Generate only the social media post, no additional text:
-    `
+    Generate only the social media post, no additional text:`
 
-    const newsletterPrompt = `
-    Transform this webpage content into a well-structured newsletter section. Requirements:
+    const newsletterPrompt = `Transform the content at ${url} into a well-structured newsletter section. Requirements:
     - Start with a compelling hook or introduction
     - Present 3-4 key points or insights
     - Include actionable takeaways
@@ -139,18 +54,26 @@ export async function POST(request: NextRequest) {
     - Use a conversational, engaging tone
     ${textPrompt ? `- Additional style requirements: ${textPrompt}` : ""}
     
-    Title: ${title}
-    Content: ${textContent}
-    
-    Generate only the newsletter content, no additional text:
-    `
+    Generate only the newsletter content, no additional text:`
 
     const [socialResult, newsletterResult] = await Promise.all([
-      model.generateContent(socialPrompt).catch((err) => {
+      ai.models.generateContent({
+        model: "gemini-2.5-flash",
+        contents: [socialPrompt],
+        config: {
+          tools: [{ urlContext: {} }],
+        },
+      }).catch((err) => {
         console.error("Social post generation failed:", err)
         return null
       }),
-      model.generateContent(newsletterPrompt).catch((err) => {
+      ai.models.generateContent({
+        model: "gemini-2.5-flash",
+        contents: [newsletterPrompt],
+        config: {
+          tools: [{ urlContext: {} }],
+        },
+      }).catch((err) => {
         console.error("Newsletter generation failed:", err)
         return null
       }),
@@ -166,15 +89,19 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const socialPost = socialResult.response.text().trim()
-    const newsletter = newsletterResult.response.text().trim()
+    const socialPost = socialResult.text?.trim() || "Failed to generate social post"
+    const newsletter = newsletterResult.text?.trim() || "Failed to generate newsletter"
 
     console.log("Content generated successfully")
     console.log("Social post length:", socialPost.length)
     console.log("Newsletter length:", newsletter.length)
 
+    // Log metadata to see which URLs the model retrieved
+    console.log("Social post URL metadata:", socialResult.candidates?.[0]?.urlContextMetadata)
+    console.log("Newsletter URL metadata:", newsletterResult.candidates?.[0]?.urlContextMetadata)
+
     return NextResponse.json({
-      title,
+      title: "Generated from URL", // Title extraction is now handled by the AI
       socialPost,
       newsletter,
     })
