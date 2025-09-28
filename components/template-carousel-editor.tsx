@@ -3,6 +3,8 @@
 import { useState, useEffect, useRef } from "react"
 import html2canvas from "html2canvas-pro"
 import jsPDF from "jspdf"
+import JSZip from "jszip"
+import { saveAs } from "file-saver"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -76,7 +78,7 @@ export function TemplateCarouselEditor({ content, contentType, onClose }: Templa
   const [currentSlide, setCurrentSlide] = useState(0)
   const [isEditing, setIsEditing] = useState(false)
   const [editingSlide, setEditingSlide] = useState<CarouselSlide | null>(null)
-  const [isExporting, setIsExporting] = useState(false)
+  const [exportingFormat, setExportingFormat] = useState<'pdf' | 'images' | null>(null)
   const [selectedTemplate, setSelectedTemplate] = useState<CarouselTemplate | null>(null)
   const [editingElement, setEditingElement] = useState<TemplateElement | null>(null)
   const { toast } = useToast()
@@ -346,154 +348,32 @@ export function TemplateCarouselEditor({ content, contentType, onClose }: Templa
     return '#ffffff'
   }
 
-  const exportCarousel = async () => {
-    setIsExporting(true)
+  const exportCarousel = async (format: 'pdf' | 'images') => {
+    setExportingFormat(format)
     try {
       if (slides.length === 0) {
         throw new Error('No slides to export')
       }
 
-      const pdf = new jsPDF({
-        orientation: 'portrait',
-        unit: 'mm',
-        format: 'a4'
-      })
+      if (format === 'pdf') {
+        const pdf = new jsPDF({
+          orientation: 'portrait',
+          unit: 'mm',
+          format: 'a4'
+        })
 
-      for (let i = 0; i < slides.length; i++) {
-        if (i > 0) {
-          pdf.addPage()
-        }
-
-        const slide = slides[i]
-        const template = selectedTemplate || getTemplateById(slide.templateId || '')
-
-        try {
-          const backgroundColor = convertToRGB(slide.backgroundColor || '#ffffff')
-          const textColor = convertToRGB(slide.textColor || '#000000')
-          
-
-          const tempContainer = document.createElement('div')
-          tempContainer.style.position = 'absolute'
-          tempContainer.style.left = '-9999px'
-          tempContainer.style.top = '0'
-          tempContainer.style.width = '800px'
-          tempContainer.style.height = '600px'
-          tempContainer.style.backgroundColor = backgroundColor
-          tempContainer.style.color = textColor
-          tempContainer.style.padding = '60px'
-          tempContainer.style.display = 'flex'
-          tempContainer.style.flexDirection = 'column'
-          tempContainer.style.justifyContent = 'center'
-          tempContainer.style.alignItems = slide.textAlign === 'left' ? 'flex-start' : slide.textAlign === 'right' ? 'flex-end' : 'center'
-          tempContainer.style.borderRadius = '16px'
-          tempContainer.style.boxShadow = '0 10px 25px rgba(0,0,0,0.1)'
-          tempContainer.style.zIndex = '9999'
-          tempContainer.style.pointerEvents = 'none'
-          
-
-          if (slide.backgroundImage) {
-            tempContainer.style.backgroundImage = `url(${slide.backgroundImage})`
-            tempContainer.style.backgroundSize = 'cover'
-            tempContainer.style.backgroundPosition = 'center'
-            tempContainer.style.backgroundRepeat = 'no-repeat'
+        for (let i = 0; i < slides.length; i++) {
+          if (i > 0) {
+            pdf.addPage()
           }
 
-          // If using template elements, render them
-          if (slide.elements && template) {
-            slide.elements.forEach(element => {
-              if (element.type === 'text') {
-                const textEl = document.createElement('div')
-                textEl.textContent = element.content
-                textEl.style.position = 'absolute'
-                textEl.style.left = `${element.position.x}%`
-                textEl.style.top = `${element.position.y}%`
-                textEl.style.width = `${element.position.width}%`
-                textEl.style.height = `${element.position.height}%`
-                textEl.style.fontSize = `${element.style.fontSize || 24}px`
-                textEl.style.color = convertToRGB(element.style.color)
-                textEl.style.fontFamily = getCSSFontFamily(element.style.fontFamily)
-                textEl.style.fontWeight = element.style.fontWeight || 'normal'
-                textEl.style.textAlign = element.style.textAlign
-                textEl.style.display = 'flex'
-                textEl.style.alignItems = 'center'
-                textEl.style.justifyContent = element.style.textAlign === 'center' ? 'center' : element.style.textAlign === 'right' ? 'flex-end' : 'flex-start'
-                tempContainer.appendChild(textEl)
-              } else if (element.type === 'shape') {
-                const shapeEl = document.createElement('div')
-                shapeEl.style.position = 'absolute'
-                shapeEl.style.left = `${element.position.x}%`
-                shapeEl.style.top = `${element.position.y}%`
-                shapeEl.style.width = `${element.position.width}%`
-                shapeEl.style.height = `${element.position.height}%`
-                shapeEl.style.backgroundColor = convertToRGB(element.style.backgroundColor || '#000000')
-                shapeEl.style.borderRadius = `${element.style.borderRadius || 0}px`
-                tempContainer.appendChild(shapeEl)
-              }
-            })
-          } else {
-            // Fallback to simple text rendering
-            const headline = document.createElement('h2')
-            const headlineText = slide.headline || `Slide ${i + 1} Title`
-            headline.textContent = headlineText
-            headline.style.marginBottom = '24px'
-            headline.style.lineHeight = '1.2'
-            headline.style.fontSize = slide.textSize === 'large' ? '36px' : slide.textSize === 'small' ? '24px' : '30px'
-            headline.style.fontWeight = slide.fontWeight || 'bold'
-            headline.style.fontFamily = getCSSFontFamily(slide.fontFamily || 'inter')
-            headline.style.color = convertToRGB(slide.textColor || '#000000')
-            headline.style.textAlign = slide.textAlign || 'center'
-            headline.style.margin = '0 0 24px 0'
-
-            const content = document.createElement('p')
-            const contentText = slide.content || 'This is sample slide content to test PDF generation.'
-            content.textContent = contentText
-            content.style.fontSize = slide.textSize === 'large' ? '24px' : slide.textSize === 'small' ? '16px' : '20px'
-            content.style.fontWeight = 'normal'
-            content.style.lineHeight = '1.5'
-            content.style.fontFamily = getCSSFontFamily(slide.fontFamily || 'inter')
-            content.style.color = convertToRGB(slide.textColor || '#000000')
-            content.style.textAlign = slide.textAlign || 'center'
-            content.style.margin = '0'
-            content.style.maxWidth = '100%'
-
-
-            tempContainer.appendChild(headline)
-            tempContainer.appendChild(content)
-          }
-
-          document.body.appendChild(tempContainer)
-
-
-          await new Promise(resolve => setTimeout(resolve, 500))
-
-          const canvas = await html2canvas(tempContainer, {
-            backgroundColor: convertToRGB(slide.backgroundColor || '#ffffff'),
-            scale: 1.5,
-            useCORS: true,
-            allowTaint: true,
-            width: 800,
-            height: 600,
-            logging: false,
-            removeContainer: false,
-            foreignObjectRendering: false,
-            imageTimeout: 5000
-          })
-
-          try {
-            if (tempContainer && tempContainer.parentNode) {
-              document.body.removeChild(tempContainer)
-            }
-          } catch (removeError) {
-            console.warn('Could not remove temporary container:', removeError)
-          }
-
+          const canvas = await renderSlideToCanvas(slides[i])
           if (canvas.width === 0 || canvas.height === 0) {
             console.error(`Empty canvas for slide ${i + 1} - skipping`)
             continue
           }
 
           const imgData = canvas.toDataURL('image/png', 0.95)
-          
           if (imgData === 'data:,' || !imgData || imgData.length < 100) {
             console.error(`Invalid image data for slide ${i + 1} - skipping`)
             continue
@@ -509,33 +389,32 @@ export function TemplateCarouselEditor({ content, contentType, onClose }: Templa
           const imgY = (pdfHeight - imgHeight * ratio) / 2
 
           pdf.addImage(imgData, 'PNG', imgX, imgY, imgWidth * ratio, imgHeight * ratio)
-        } catch (slideError) {
-          console.error(`Error processing slide ${i + 1}:`, slideError)
-          
-          try {
-            if (tempContainer && tempContainer.parentNode) {
-              document.body.removeChild(tempContainer)
-            }
-          } catch (removeError) {
-            console.warn('Could not remove temporary container after error:', removeError)
-          }
-          
-          const pdfWidth = pdf.internal.pageSize.getWidth()
-          const pdfHeight = pdf.internal.pageSize.getHeight()
-          pdf.setFontSize(16)
-          pdf.text(`Error loading slide ${i + 1}`, pdfWidth / 2 - 40, pdfHeight / 2)
-          pdf.setFontSize(12)
-          pdf.text(`Error: ${slideError.message || 'Unknown error'}`, pdfWidth / 2 - 60, pdfHeight / 2 + 10)
         }
+
+        const fileName = `carousel-${contentType}-${new Date().getTime()}.pdf`
+        pdf.save(fileName)
+
+        toast({
+          title: "Carousel exported",
+          description: `Carousel exported as PDF with ${slides.length} slides`,
+        })
+      } else if (format === 'images') {
+        const zip = new JSZip();
+        for (let i = 0; i < slides.length; i++) {
+          const canvas = await renderSlideToCanvas(slides[i]);
+          const blob = await new Promise<Blob | null>(resolve => canvas.toBlob(resolve, 'image/png'));
+          if (blob) {
+            zip.file(`slide-${i + 1}.png`, blob);
+          }
+        }
+        const zipBlob = await zip.generateAsync({ type: 'blob' });
+        saveAs(zipBlob, `carousel-images-${new Date().getTime()}.zip`);
+        
+        toast({
+          title: "Carousel exported",
+          description: "All slides exported as a single zip file.",
+        });
       }
-
-      const fileName = `carousel-${contentType}-${new Date().getTime()}.pdf`
-      pdf.save(fileName)
-
-      toast({
-        title: "Carousel exported",
-        description: `Carousel exported as PDF with ${slides.length} slides`,
-      })
     } catch (error) {
       console.error('Export error:', error)
       toast({
@@ -544,20 +423,121 @@ export function TemplateCarouselEditor({ content, contentType, onClose }: Templa
         variant: "destructive",
       })
     } finally {
-      const tempElements = document.querySelectorAll('[style*="-2000px"]')
-      tempElements.forEach(el => {
-        try {
-          if (el.parentNode) {
-            el.parentNode.removeChild(el)
-          }
-        } catch (cleanupError) {
-          console.warn('Could not remove temporary element:', cleanupError)
-        }
-      })
-      
-      setIsExporting(false)
+      setExportingFormat(null)
     }
   }
+
+  const renderSlideToCanvas = async (slide: CarouselSlide): Promise<HTMLCanvasElement> => {
+    const template = selectedTemplate || getTemplateById(slide.templateId || '')
+    const backgroundColor = convertToRGB(slide.backgroundColor || '#ffffff')
+    const textColor = convertToRGB(slide.textColor || '#000000')
+
+    const tempContainer = document.createElement('div')
+    tempContainer.style.position = 'absolute'
+    tempContainer.style.left = '-9999px'
+    tempContainer.style.top = '0'
+    tempContainer.style.width = '800px'
+    tempContainer.style.height = '600px'
+    tempContainer.style.backgroundColor = backgroundColor
+    tempContainer.style.color = textColor
+    tempContainer.style.padding = '60px'
+    tempContainer.style.display = 'flex'
+    tempContainer.style.flexDirection = 'column'
+    tempContainer.style.justifyContent = 'center'
+    tempContainer.style.alignItems = slide.textAlign === 'left' ? 'flex-start' : slide.textAlign === 'right' ? 'flex-end' : 'center'
+    tempContainer.style.borderRadius = '16px'
+    tempContainer.style.boxShadow = '0 10px 25px rgba(0,0,0,0.1)'
+    tempContainer.style.zIndex = '-1'
+    tempContainer.style.pointerEvents = 'none'
+
+    if (slide.backgroundImage) {
+      tempContainer.style.backgroundImage = `url(${slide.backgroundImage})`
+      tempContainer.style.backgroundSize = 'cover'
+      tempContainer.style.backgroundPosition = 'center'
+      tempContainer.style.backgroundRepeat = 'no-repeat'
+    }
+
+    if (slide.elements && template) {
+      slide.elements.forEach(element => {
+        if (element.type === 'text') {
+          const textEl = document.createElement('div')
+          textEl.textContent = element.content
+          textEl.style.position = 'absolute'
+          textEl.style.left = `${element.position.x}%`
+          textEl.style.top = `${element.position.y}%`
+          textEl.style.width = `${element.position.width}%`
+          textEl.style.height = `${element.position.height}%`
+          textEl.style.fontSize = `${element.style.fontSize || 24}px`
+          textEl.style.color = convertToRGB(element.style.color)
+          textEl.style.fontFamily = getCSSFontFamily(element.style.fontFamily)
+          textEl.style.fontWeight = element.style.fontWeight || 'normal'
+          textEl.style.textAlign = element.style.textAlign
+          textEl.style.display = 'flex'
+          textEl.style.alignItems = 'center'
+          textEl.style.justifyContent = element.style.textAlign === 'center' ? 'center' : element.style.textAlign === 'right' ? 'flex-end' : 'flex-start'
+          tempContainer.appendChild(textEl)
+        } else if (element.type === 'shape') {
+          const shapeEl = document.createElement('div')
+          shapeEl.style.position = 'absolute'
+          shapeEl.style.left = `${element.position.x}%`
+          shapeEl.style.top = `${element.position.y}%`
+          shapeEl.style.width = `${element.position.width}%`
+          shapeEl.style.height = `${element.position.height}%`
+          shapeEl.style.backgroundColor = convertToRGB(element.style.backgroundColor || '#000000')
+          shapeEl.style.borderRadius = `${element.style.borderRadius || 0}px`
+          tempContainer.appendChild(shapeEl)
+        }
+      })
+    } else {
+      const headline = document.createElement('h2')
+      headline.textContent = slide.headline || `Slide Title`
+      headline.style.marginBottom = '24px'
+      headline.style.lineHeight = '1.2'
+      headline.style.fontSize = slide.textSize === 'large' ? '36px' : slide.textSize === 'small' ? '24px' : '30px'
+      headline.style.fontWeight = slide.fontWeight || 'bold'
+      headline.style.fontFamily = getCSSFontFamily(slide.fontFamily || 'inter')
+      headline.style.color = convertToRGB(slide.textColor || '#000000')
+      headline.style.textAlign = slide.textAlign || 'center'
+      headline.style.margin = '0 0 24px 0'
+
+      const content = document.createElement('p')
+      content.textContent = slide.content || 'This is sample slide content.'
+      content.style.fontSize = slide.textSize === 'large' ? '24px' : slide.textSize === 'small' ? '16px' : '20px'
+      content.style.fontWeight = 'normal'
+      content.style.lineHeight = '1.5'
+      content.style.fontFamily = getCSSFontFamily(slide.fontFamily || 'inter')
+      content.style.color = convertToRGB(slide.textColor || '#000000')
+      content.style.textAlign = slide.textAlign || 'center'
+      content.style.margin = '0'
+      content.style.maxWidth = '100%'
+
+      tempContainer.appendChild(headline)
+      tempContainer.appendChild(content)
+    }
+
+    document.body.appendChild(tempContainer)
+    await new Promise(resolve => setTimeout(resolve, 500))
+
+    const canvas = await html2canvas(tempContainer, {
+      backgroundColor: convertToRGB(slide.backgroundColor || '#ffffff'),
+      scale: 1.5,
+      useCORS: true,
+      allowTaint: true,
+      width: 800,
+      height: 600,
+      logging: false,
+      removeContainer: true,
+      foreignObjectRendering: false,
+      imageTimeout: 5000
+    })
+
+    if (tempContainer.parentNode) {
+      document.body.removeChild(tempContainer)
+    }
+
+    return canvas
+  }
+
 
   const renderSlidePreview = (slide: CarouselSlide, template?: CarouselTemplate) => {
     if (slide.elements && template) {
@@ -949,16 +929,28 @@ export function TemplateCarouselEditor({ content, contentType, onClose }: Templa
                 <div className="space-y-3">
                   <Button
                     variant="outline"
-                    onClick={() => exportCarousel()}
-                    disabled={isExporting}
+                    onClick={() => exportCarousel('pdf')}
+                    disabled={exportingFormat !== null}
                     className="w-full h-12 flex items-center gap-2"
                   >
-                    {isExporting ? (
+                    {exportingFormat === 'pdf' ? (
                       <Loader2 className="h-5 w-5 animate-spin" />
                     ) : (
                       <FileText className="h-5 w-5" />
                     )}
                     Export PDF
+                  </Button>
+                  <Button
+                    onClick={() => exportCarousel('images')}
+                    disabled={exportingFormat !== null}
+                    className="w-full h-12 flex items-center gap-2"
+                  >
+                    {exportingFormat === 'images' ? (
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                    ) : (
+                      <ImageIcon className="h-5 w-5" />
+                    )}
+                    Export as Images
                   </Button>
                   <p className="text-sm text-muted-foreground text-center">
                     Export your carousel for sharing or further editing
