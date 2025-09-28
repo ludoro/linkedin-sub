@@ -261,48 +261,6 @@ export function ContentEditableEditor({ element, onSave, onCancel }: ContentEdit
         </div>
       </div>
 
-      {/* Quick Style Buttons */}
-      <div className="space-y-2">
-        <Label className="text-sm font-medium">Quick Styles</Label>
-        <div className="flex gap-2 flex-wrap">
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => handleStyleChange('fontWeight', 'bold')}
-            className="flex items-center gap-2"
-          >
-            <Bold className="h-4 w-4" />
-            Bold
-          </Button>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => handleStyleChange('fontWeight', 'normal')}
-            className="flex items-center gap-2"
-          >
-            <Type className="h-4 w-4" />
-            Normal
-          </Button>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => handleStyleChange('textAlign', 'center')}
-            className="flex items-center gap-2"
-          >
-            <AlignCenter className="h-4 w-4" />
-            Center
-          </Button>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => handleStyleChange('color', '#3b82f6')}
-            className="flex items-center gap-2"
-          >
-            <Palette className="h-4 w-4" />
-            Blue
-          </Button>
-        </div>
-      </div>
     </div>
   )
 }

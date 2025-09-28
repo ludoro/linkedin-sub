@@ -776,55 +776,6 @@ export function InlineCarouselEditor({ content, contentType, onClose }: InlineCa
                       />
                     </div>
 
-                    {/* Color Controls */}
-                    <div className="space-y-3">
-                      <h4 className="font-medium text-sm">Colors</h4>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label className="text-sm font-medium">Background Color</Label>
-                          <div className="flex gap-2">
-                            <Input
-                              type="color"
-                              value={editingSlide.backgroundColor}
-                              onChange={(e) => setEditingSlide(prev => 
-                                prev ? { ...prev, backgroundColor: e.target.value } : null
-                              )}
-                              className="w-12 h-10 p-1 border rounded"
-                            />
-                            <Input
-                              value={editingSlide.backgroundColor}
-                              onChange={(e) => setEditingSlide(prev => 
-                                prev ? { ...prev, backgroundColor: e.target.value } : null
-                              )}
-                              className="flex-1 text-sm"
-                              placeholder="#ffffff"
-                            />
-                          </div>
-                        </div>
-
-                        <div className="space-y-2">
-                          <Label className="text-sm font-medium">Text Color</Label>
-                          <div className="flex gap-2">
-                            <Input
-                              type="color"
-                              value={editingSlide.textColor}
-                              onChange={(e) => setEditingSlide(prev => 
-                                prev ? { ...prev, textColor: e.target.value } : null
-                              )}
-                              className="w-12 h-10 p-1 border rounded"
-                            />
-                            <Input
-                              value={editingSlide.textColor}
-                              onChange={(e) => setEditingSlide(prev => 
-                                prev ? { ...prev, textColor: e.target.value } : null
-                              )}
-                              className="flex-1 text-sm"
-                              placeholder="#000000"
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    </div>
                   </div>
                 ) : (
                   <div className="space-y-4 text-sm">
