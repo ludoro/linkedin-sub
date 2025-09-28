@@ -3,6 +3,7 @@
 import { Header } from "@/components/header"
 import { Hero } from "@/components/hero"
 import { Features } from "@/components/features"
+import { Pricing } from "@/components/pricing"
 import { LinkConverter } from "@/components/link-converter"
 
 export default function HomePage() {
@@ -12,6 +13,7 @@ export default function HomePage() {
       <Hero />
       <LinkConverter />
       <Features />
+      <Pricing />
     </main>
   )
 }
