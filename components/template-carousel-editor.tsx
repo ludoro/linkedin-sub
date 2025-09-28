@@ -12,7 +12,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Separator } from "@/components/ui/separator"
 import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { 
   Loader2, 
   ChevronLeft, 
@@ -111,6 +110,7 @@ export function TemplateCarouselEditor({ content, contentType, onClose }: Templa
         body: JSON.stringify({
           content,
           type: contentType,
+          templateId: 'social-modern', // Use the modern social template by default
         }),
       })
 
@@ -119,17 +119,15 @@ export function TemplateCarouselEditor({ content, contentType, onClose }: Templa
       if (data.success) {
         setSlides(data.slides)
         
-        // Auto-apply Modern Social template to generated slides
-        const modernSocialTemplate = getTemplateById('social-modern')
-        if (modernSocialTemplate && data.slides.length > 0) {
-          setSelectedTemplate(modernSocialTemplate)
-          const templatedSlides = data.slides.map((slide: any, index: number) => 
-            createSlideFromTemplate(modernSocialTemplate, index + 1, {
-              headline: slide.headline,
-              content: slide.content
-            })
-          )
-          setSlides(templatedSlides)
+        // Set the selected template if one was used by the API
+        if (data.template) {
+          setSelectedTemplate(data.template)
+        } else {
+          // Auto-select Modern Social template for future template applications
+          const modernSocialTemplate = getTemplateById('social-modern')
+          if (modernSocialTemplate) {
+            setSelectedTemplate(modernSocialTemplate)
+          }
         }
         
         toast({
@@ -855,221 +853,191 @@ export function TemplateCarouselEditor({ content, contentType, onClose }: Templa
                     onCancel={() => setEditingElement(null)}
                   />
                 ) : isEditing && editingSlide ? (
-                  <Tabs defaultValue="content" className="w-full">
-                    <TabsList className="grid w-full grid-cols-2">
-                      <TabsTrigger value="content">Content</TabsTrigger>
-                      <TabsTrigger value="style">Style</TabsTrigger>
-                    </TabsList>
-                    
-                    <TabsContent value="content" className="space-y-6 mt-4">
+                  <div className="space-y-6 mt-4">
+                    {/* Editable Elements Section */}
+                    {editingSlide.elements && editingSlide.elements.length > 0 && (
                       <div className="space-y-4">
-                        <div className="space-y-3">
-                          <Label htmlFor="headline" className="text-sm font-medium">Headline</Label>
-                          <Textarea
-                            id="headline"
-                            value={editingSlide.headline}
-                            onChange={(e) => setEditingSlide(prev => 
-                              prev ? { ...prev, headline: e.target.value } : null
-                            )}
-                            className="min-h-[100px] text-sm"
-                            placeholder="Enter compelling headline..."
-                          />
-                        </div>
-
-                        <div className="space-y-3">
-                          <Label htmlFor="content" className="text-sm font-medium">Content</Label>
-                          <Textarea
-                            id="content"
-                            value={editingSlide.content}
-                            onChange={(e) => setEditingSlide(prev => 
-                              prev ? { ...prev, content: e.target.value } : null
-                            )}
-                            className="min-h-[140px] text-sm"
-                            placeholder="Enter slide content..."
-                          />
-                        </div>
-                      </div>
-
-                      {editingSlide.elements && (
-                        <div className="space-y-4">
-                          <h4 className="font-medium text-sm">Template Elements</h4>
-                          <div className="space-y-3">
-                            {editingSlide.elements.map((element) => (
-                              <div key={element.id} className="p-4 border rounded-lg bg-gray-50/50">
-                                <div className="flex items-center justify-between mb-3">
-                                  <span className="text-sm font-medium capitalize">{element.id}</span>
-                                  {element.editable && (
-                                    <Button
-                                      size="sm"
-                                      variant="outline"
-                                      onClick={() => startElementEditing(element)}
-                                      className="h-8"
-                                    >
-                                      Edit
-                                    </Button>
-                                  )}
-                                </div>
-                                <div className="p-3 bg-white rounded border text-sm">
-                                  {element.content}
-                                </div>
+                        <h4 className="font-medium text-sm">Text Elements</h4>
+                        {editingSlide.elements
+                          .filter(el => el.type === 'text' && el.editable)
+                          .map((element, index) => (
+                            <div key={element.id} className="space-y-3 p-4 border rounded-lg">
+                              <div className="flex items-center justify-between">
+                                <Label className="text-sm font-medium">
+                                  {element.content.length > 30 
+                                    ? `${element.content.substring(0, 30)}...` 
+                                    : element.content || `Text Element ${index + 1}`
+                                  }
+                                </Label>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => startElementEditing(element)}
+                                  className="flex items-center gap-2"
+                                >
+                                  <Edit3 className="h-4 w-4" />
+                                  Edit Style
+                                </Button>
                               </div>
-                            ))}
+                              <Textarea
+                                value={element.content}
+                                onChange={(e) => {
+                                  const updatedElement = { ...element, content: e.target.value }
+                                  handleElementUpdate(element.id, { content: e.target.value })
+                                }}
+                                className="min-h-[80px] text-sm"
+                                placeholder="Enter text content..."
+                              />
+                            </div>
+                          ))}
+                      </div>
+                    )}
+
+                    {/* Color Controls */}
+                    <div className="space-y-4">
+                      <h4 className="font-medium text-sm">Colors</h4>
+                      <div className="grid grid-cols-1 gap-4">
+                        <div className="space-y-2">
+                          <Label className="text-sm font-medium">Background Color</Label>
+                          <div className="flex gap-3">
+                            <Input
+                              type="color"
+                              value={editingSlide.backgroundColor}
+                              onChange={(e) => setEditingSlide(prev => 
+                                prev ? { ...prev, backgroundColor: e.target.value } : null
+                              )}
+                              className="w-16 h-12 p-1 border rounded-lg cursor-pointer"
+                            />
+                            <Input
+                              value={editingSlide.backgroundColor}
+                              onChange={(e) => setEditingSlide(prev => 
+                                prev ? { ...prev, backgroundColor: e.target.value } : null
+                              )}
+                              className="flex-1 h-12 text-sm"
+                              placeholder="#ffffff"
+                            />
                           </div>
                         </div>
-                      )}
-                    </TabsContent>
 
-                    <TabsContent value="style" className="space-y-6 mt-4">
-                      {/* Color Controls */}
-                      <div className="space-y-4">
-                        <h4 className="font-medium text-sm">Colors</h4>
-                        <div className="grid grid-cols-1 gap-4">
-                          <div className="space-y-2">
-                            <Label className="text-sm font-medium">Background Color</Label>
-                            <div className="flex gap-3">
-                              <Input
-                                type="color"
-                                value={editingSlide.backgroundColor}
-                                onChange={(e) => setEditingSlide(prev => 
-                                  prev ? { ...prev, backgroundColor: e.target.value } : null
-                                )}
-                                className="w-16 h-12 p-1 border rounded-lg cursor-pointer"
-                              />
-                              <Input
-                                value={editingSlide.backgroundColor}
-                                onChange={(e) => setEditingSlide(prev => 
-                                  prev ? { ...prev, backgroundColor: e.target.value } : null
-                                )}
-                                className="flex-1 h-12 text-sm"
-                                placeholder="#ffffff"
-                              />
-                            </div>
-                          </div>
-
-                          <div className="space-y-2">
-                            <Label className="text-sm font-medium">Text Color</Label>
-                            <div className="flex gap-3">
-                              <Input
-                                type="color"
-                                value={editingSlide.textColor}
-                                onChange={(e) => setEditingSlide(prev => 
-                                  prev ? { ...prev, textColor: e.target.value } : null
-                                )}
-                                className="w-16 h-12 p-1 border rounded-lg cursor-pointer"
-                              />
-                              <Input
-                                value={editingSlide.textColor}
-                                onChange={(e) => setEditingSlide(prev => 
-                                  prev ? { ...prev, textColor: e.target.value } : null
-                                )}
-                                className="flex-1 h-12 text-sm"
-                                placeholder="#000000"
-                              />
-                            </div>
+                        <div className="space-y-2">
+                          <Label className="text-sm font-medium">Text Color</Label>
+                          <div className="flex gap-3">
+                            <Input
+                              type="color"
+                              value={editingSlide.textColor}
+                              onChange={(e) => setEditingSlide(prev => 
+                                prev ? { ...prev, textColor: e.target.value } : null
+                              )}
+                              className="w-16 h-12 p-1 border rounded-lg cursor-pointer"
+                            />
+                            <Input
+                              value={editingSlide.textColor}
+                              onChange={(e) => setEditingSlide(prev => 
+                                prev ? { ...prev, textColor: e.target.value } : null
+                              )}
+                              className="flex-1 h-12 text-sm"
+                              placeholder="#000000"
+                            />
                           </div>
                         </div>
                       </div>
+                    </div>
 
-                      {/* Typography Controls */}
-                      <div className="space-y-4">
-                        <h4 className="font-medium text-sm">Typography</h4>
-                        <div className="grid grid-cols-1 gap-4">
-                          <div className="space-y-2">
-                            <Label className="text-sm font-medium">Font Family</Label>
-                            <Select
-                              value={editingSlide.fontFamily}
-                              onValueChange={(value: any) => 
-                                setEditingSlide(prev => 
-                                  prev ? { ...prev, fontFamily: value } : null
-                                )
-                              }
-                            >
-                              <SelectTrigger className="h-12">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {fontOptions.map((font) => (
-                                  <SelectItem key={font.value} value={font.value}>
-                                    {font.label}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </div>
-
-                          <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                              <Label className="text-sm font-medium">Text Size</Label>
-                              <Select
-                                value={editingSlide.textSize}
-                                onValueChange={(value: 'large' | 'medium' | 'small') => 
-                                  setEditingSlide(prev => 
-                                    prev ? { ...prev, textSize: value } : null
-                                  )
-                                }
-                              >
-                                <SelectTrigger className="h-12">
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="small">Small</SelectItem>
-                                  <SelectItem value="medium">Medium</SelectItem>
-                                  <SelectItem value="large">Large</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </div>
-
-                            <div className="space-y-2">
-                              <Label className="text-sm font-medium">Font Weight</Label>
-                              <Select
-                                value={editingSlide.fontWeight}
-                                onValueChange={(value: 'normal' | 'medium' | 'semibold' | 'bold') => 
-                                  setEditingSlide(prev => 
-                                    prev ? { ...prev, fontWeight: value } : null
-                                  )
-                                }
-                              >
-                                <SelectTrigger className="h-12">
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {fontWeightOptions.map((weight) => (
-                                    <SelectItem key={weight.value} value={weight.value}>
-                                      {weight.label}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            </div>
-                          </div>
+                    {/* Typography Controls */}
+                    <div className="space-y-4">
+                      <h4 className="font-medium text-sm">Typography</h4>
+                      <div className="grid grid-cols-1 gap-4">
+                        <div className="space-y-2">
+                          <Label className="text-sm font-medium">Font Family</Label>
+                          <Select
+                            value={editingSlide.fontFamily}
+                            onValueChange={(value) => setEditingSlide(prev => 
+                              prev ? { ...prev, fontFamily: value } : null
+                            )}
+                          >
+                            <SelectTrigger className="h-12">
+                              <SelectValue placeholder="Select font" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {fontOptions.map((font) => (
+                                <SelectItem key={font.value} value={font.value}>
+                                  <span className={font.class}>{font.label}</span>
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                         </div>
-                      </div>
 
-                      {/* Alignment Controls */}
-                      <div className="space-y-4">
-                        <h4 className="font-medium text-sm">Alignment</h4>
+                        <div className="space-y-2">
+                          <Label className="text-sm font-medium">Font Weight</Label>
+                          <Select
+                            value={editingSlide.fontWeight}
+                            onValueChange={(value) => setEditingSlide(prev => 
+                              prev ? { ...prev, fontWeight: value } : null
+                            )}
+                          >
+                            <SelectTrigger className="h-12">
+                              <SelectValue placeholder="Select weight" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {fontWeightOptions.map((weight) => (
+                                <SelectItem key={weight.value} value={weight.value}>
+                                  <div className="flex items-center gap-2">
+                                    <weight.icon className="h-4 w-4" />
+                                    {weight.label}
+                                  </div>
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label className="text-sm font-medium">Text Size</Label>
+                          <Select
+                            value={editingSlide.textSize}
+                            onValueChange={(value) => setEditingSlide(prev => 
+                              prev ? { ...prev, textSize: value } : null
+                            )}
+                          >
+                            <SelectTrigger className="h-12">
+                              <SelectValue placeholder="Select size" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="small">Small</SelectItem>
+                              <SelectItem value="medium">Medium</SelectItem>
+                              <SelectItem value="large">Large</SelectItem>
+                              <SelectItem value="xlarge">Extra Large</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+
                         <div className="space-y-2">
                           <Label className="text-sm font-medium">Text Alignment</Label>
-                          <div className="flex gap-2">
-                            {textAlignOptions.map((align) => (
-                              <Button
-                                key={align.value}
-                                variant={editingSlide.textAlign === align.value ? "default" : "outline"}
-                                size="sm"
-                                onClick={() => setEditingSlide(prev => 
-                                  prev ? { ...prev, textAlign: align.value as any } : null
-                                )}
-                                className="flex items-center gap-2 h-12 px-4"
-                              >
-                                <align.icon className="h-4 w-4" />
-                                {align.label}
-                              </Button>
-                            ))}
-                          </div>
+                          <Select
+                            value={editingSlide.textAlign}
+                            onValueChange={(value) => setEditingSlide(prev => 
+                              prev ? { ...prev, textAlign: value } : null
+                            )}
+                          >
+                            <SelectTrigger className="h-12">
+                              <SelectValue placeholder="Select alignment" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {textAlignOptions.map((align) => (
+                                <SelectItem key={align.value} value={align.value}>
+                                  <div className="flex items-center gap-2">
+                                    <align.icon className="h-4 w-4" />
+                                    {align.label}
+                                  </div>
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                         </div>
                       </div>
-                    </TabsContent>
-                  </Tabs>
+                    </div>
+                  </div>
                 ) : (
                   <div className="space-y-6">
                     <div className="space-y-4">

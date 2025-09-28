@@ -213,7 +213,7 @@ export const carouselTemplates: CarouselTemplate[] = [
         content: 'Presentation Title',
         position: { x: 15, y: 30, width: 70, height: 20 },
         style: {
-          fontSize: 32,
+          fontSize: 28,
           color: '#2563eb',
           fontFamily: 'inter',
           fontWeight: 'bold',
@@ -227,7 +227,7 @@ export const carouselTemplates: CarouselTemplate[] = [
         content: 'Key points and supporting information for your presentation slide.',
         position: { x: 15, y: 55, width: 70, height: 30 },
         style: {
-          fontSize: 20,
+          fontSize: 18,
           color: '#111827',
           fontFamily: 'inter',
           fontWeight: 'normal',
