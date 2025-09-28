@@ -1060,51 +1060,20 @@ export function TemplateCarouselEditor({ content, contentType, onClose }: Templa
                       <div className="grid grid-cols-1 gap-4">
                         <div className="space-y-2">
                           <span className="font-medium text-sm">Colors</span>
-                          <div className="grid grid-cols-2 gap-4">
-                            <div className="flex items-center gap-3 p-3 bg-gray-50 rounded border">
-                              <div 
-                                className="w-6 h-6 rounded border shadow-sm"
-                                style={{ backgroundColor: slides[currentSlide]?.backgroundColor }}
-                              />
-                              <div>
-                                <p className="text-xs font-medium">Background</p>
-                                <p className="text-xs text-muted-foreground">
-                                  {slides[currentSlide]?.backgroundColor}
-                                </p>
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-3 p-3 bg-gray-50 rounded border">
-                              <div 
-                                className="w-6 h-6 rounded border shadow-sm"
-                                style={{ backgroundColor: slides[currentSlide]?.textColor }}
-                              />
-                              <div>
-                                <p className="text-xs font-medium">Text</p>
-                                <p className="text-xs text-muted-foreground">
-                                  {slides[currentSlide]?.textColor}
-                                </p>
-                              </div>
+                          <div className="flex items-center gap-3 p-3 bg-gray-50 rounded border">
+                            <div 
+                              className="w-6 h-6 rounded border shadow-sm"
+                              style={{ backgroundColor: slides[currentSlide]?.backgroundColor }}
+                            />
+                            <div>
+                              <p className="text-xs font-medium">Background</p>
+                              <p className="text-xs text-muted-foreground">
+                                {slides[currentSlide]?.backgroundColor}
+                              </p>
                             </div>
                           </div>
                         </div>
 
-                        <div className="space-y-2">
-                          <span className="font-medium text-sm">Typography</span>
-                          <div className="grid grid-cols-2 gap-4">
-                            <div className="p-3 bg-gray-50 rounded border">
-                              <p className="text-xs font-medium mb-1">Font</p>
-                              <Badge variant="outline" className="text-xs">
-                                {slides[currentSlide]?.fontFamily}
-                              </Badge>
-                            </div>
-                            <div className="p-3 bg-gray-50 rounded border">
-                              <p className="text-xs font-medium mb-1">Size</p>
-                              <Badge variant="outline" className="text-xs">
-                                {slides[currentSlide]?.textSize}
-                              </Badge>
-                            </div>
-                          </div>
-                        </div>
                       </div>
                     </div>
                   </div>

@@ -836,44 +836,16 @@ export function InlineCarouselEditor({ content, contentType, onClose }: InlineCa
                       <span className="font-medium">Content:</span>
                       <p className="text-muted-foreground mt-1 line-clamp-3">{slides[currentSlide]?.content}</p>
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <span className="font-medium">Background:</span>
-                        <div className="flex items-center gap-2 mt-1">
-                          <div 
-                            className="w-4 h-4 rounded border"
-                            style={{ backgroundColor: slides[currentSlide]?.backgroundColor }}
-                          />
-                          <span className="text-xs text-muted-foreground">
-                            {slides[currentSlide]?.backgroundColor}
-                          </span>
-                        </div>
-                      </div>
-                      <div>
-                        <span className="font-medium">Text:</span>
-                        <div className="flex items-center gap-2 mt-1">
-                          <div 
-                            className="w-4 h-4 rounded border"
-                            style={{ backgroundColor: slides[currentSlide]?.textColor }}
-                          />
-                          <span className="text-xs text-muted-foreground">
-                            {slides[currentSlide]?.textColor}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <span className="font-medium">Font:</span>
-                        <Badge variant="outline" className="ml-2 text-xs">
-                          {slides[currentSlide]?.fontFamily}
-                        </Badge>
-                      </div>
-                      <div>
-                        <span className="font-medium">Size:</span>
-                        <Badge variant="outline" className="ml-2 text-xs">
-                          {slides[currentSlide]?.textSize}
-                        </Badge>
+                    <div>
+                      <span className="font-medium">Background:</span>
+                      <div className="flex items-center gap-2 mt-1">
+                        <div 
+                          className="w-4 h-4 rounded border"
+                          style={{ backgroundColor: slides[currentSlide]?.backgroundColor }}
+                        />
+                        <span className="text-xs text-muted-foreground">
+                          {slides[currentSlide]?.backgroundColor}
+                        </span>
                       </div>
                     </div>
                   </div>
