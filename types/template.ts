@@ -26,7 +26,7 @@ export interface CarouselTemplate {
   id: string
   name: string
   description: string
-  category: 'social' | 'newsletter' | 'presentation' | 'marketing'
+  category: 'social' | 'newsletter' | 'presentation' | 'marketing' | 'geometric'
   aspectRatio: '9:16' | '16:9' | '1:1' | '4:3'
   backgroundColor: string
   backgroundImage?: string

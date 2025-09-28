@@ -247,6 +247,544 @@ export const carouselTemplates: CarouselTemplate[] = [
         editable: false
       }
     ]
+  },
+  {
+    id: 'geometric-hexagon',
+    name: 'Hexagonal Pattern',
+    description: 'Modern hexagonal geometric pattern with enhanced text readability',
+    category: 'geometric',
+    aspectRatio: '1:1',
+    backgroundColor: '#0f172a',
+    defaultColors: {
+      primary: '#64748b',
+      secondary: '#cbd5e1',
+      accent: '#06b6d4',
+      text: '#f8fafc',
+      background: '#0f172a'
+    },
+    defaultFonts: {
+      heading: 'inter',
+      body: 'inter',
+      accent: 'inter'
+    },
+    elements: [
+      // Hexagonal background shapes
+      {
+        id: 'hex-1',
+        type: 'shape',
+        content: '',
+        position: { x: 15, y: 10, width: 25, height: 25 },
+        style: {
+          backgroundColor: '#1e293b',
+          borderRadius: 8,
+          color: '#1e293b',
+          fontFamily: 'inter',
+          fontWeight: 'normal',
+          textAlign: 'center'
+        },
+        editable: false
+      },
+      {
+        id: 'hex-2',
+        type: 'shape',
+        content: '',
+        position: { x: 60, y: 5, width: 20, height: 20 },
+        style: {
+          backgroundColor: '#334155',
+          borderRadius: 6,
+          color: '#334155',
+          fontFamily: 'inter',
+          fontWeight: 'normal',
+          textAlign: 'center'
+        },
+        editable: false
+      },
+      {
+        id: 'hex-3',
+        type: 'shape',
+        content: '',
+        position: { x: 5, y: 70, width: 30, height: 30 },
+        style: {
+          backgroundColor: '#1e293b',
+          borderRadius: 10,
+          color: '#1e293b',
+          fontFamily: 'inter',
+          fontWeight: 'normal',
+          textAlign: 'center'
+        },
+        editable: false
+      },
+      {
+        id: 'hex-4',
+        type: 'shape',
+        content: '',
+        position: { x: 70, y: 75, width: 25, height: 25 },
+        style: {
+          backgroundColor: '#475569',
+          borderRadius: 8,
+          color: '#475569',
+          fontFamily: 'inter',
+          fontWeight: 'normal',
+          textAlign: 'center'
+        },
+        editable: false
+      },
+      // Text overlay with shadow effect
+      {
+        id: 'text-shadow',
+        type: 'shape',
+        content: '',
+        position: { x: 8, y: 38, width: 84, height: 35 },
+        style: {
+          backgroundColor: 'rgba(15, 23, 42, 0.8)',
+          borderRadius: 12,
+          color: 'rgba(15, 23, 42, 0.8)',
+          fontFamily: 'inter',
+          fontWeight: 'normal',
+          textAlign: 'center'
+        },
+        editable: false
+      },
+      {
+        id: 'headline',
+        type: 'text',
+        content: 'Geometric Design',
+        position: { x: 10, y: 38, width: 80, height: 15 },
+        style: {
+          fontSize: 28,
+          color: '#f8fafc',
+          fontFamily: 'inter',
+          fontWeight: 'bold',
+          textAlign: 'center'
+        },
+        editable: true
+      },
+      {
+        id: 'content',
+        type: 'text',
+        content: 'Clean patterns that enhance your message',
+        position: { x: 10, y: 58, width: 80, height: 15 },
+        style: {
+          fontSize: 16,
+          color: '#cbd5e1',
+          fontFamily: 'inter',
+          fontWeight: 'medium',
+          textAlign: 'center'
+        },
+        editable: true
+      }
+    ]
+  },
+  {
+    id: 'geometric-stripes',
+    name: 'Diagonal Stripes',
+    description: 'Dynamic diagonal stripes pattern with excellent text contrast',
+    category: 'geometric',
+    aspectRatio: '16:9',
+    backgroundColor: '#1e40af',
+    defaultColors: {
+      primary: '#3b82f6',
+      secondary: '#dbeafe',
+      accent: '#fbbf24',
+      text: '#ffffff',
+      background: '#1e40af'
+    },
+    defaultFonts: {
+      heading: 'montserrat',
+      body: 'inter',
+      accent: 'montserrat'
+    },
+    elements: [
+      // Diagonal stripe elements
+      {
+        id: 'stripe-1',
+        type: 'shape',
+        content: '',
+        position: { x: -10, y: 0, width: 25, height: 100 },
+        style: {
+          backgroundColor: '#2563eb',
+          borderRadius: 0,
+          color: '#2563eb',
+          fontFamily: 'inter',
+          fontWeight: 'normal',
+          textAlign: 'center'
+        },
+        editable: false
+      },
+      {
+        id: 'stripe-2',
+        type: 'shape',
+        content: '',
+        position: { x: 20, y: 0, width: 15, height: 100 },
+        style: {
+          backgroundColor: '#1d4ed8',
+          borderRadius: 0,
+          color: '#1d4ed8',
+          fontFamily: 'inter',
+          fontWeight: 'normal',
+          textAlign: 'center'
+        },
+        editable: false
+      },
+      {
+        id: 'stripe-3',
+        type: 'shape',
+        content: '',
+        position: { x: 85, y: 0, width: 20, height: 100 },
+        style: {
+          backgroundColor: '#2563eb',
+          borderRadius: 0,
+          color: '#2563eb',
+          fontFamily: 'inter',
+          fontWeight: 'normal',
+          textAlign: 'center'
+        },
+        editable: false
+      },
+      // Central content area with background
+      {
+        id: 'content-bg',
+        type: 'shape',
+        content: '',
+        position: { x: 20, y: 25, width: 60, height: 50 },
+        style: {
+          backgroundColor: 'rgba(30, 64, 175, 0.9)',
+          borderRadius: 8,
+          color: 'rgba(30, 64, 175, 0.9)',
+          fontFamily: 'inter',
+          fontWeight: 'normal',
+          textAlign: 'center'
+        },
+        editable: false
+      },
+      {
+        id: 'headline',
+        type: 'text',
+        content: 'Dynamic Stripes',
+        position: { x: 20, y: 32, width: 60, height: 15 },
+        style: {
+          fontSize: 24,
+          color: '#ffffff',
+          fontFamily: 'montserrat',
+          fontWeight: 'bold',
+          textAlign: 'center'
+        },
+        editable: true
+      },
+      {
+        id: 'content',
+        type: 'text',
+        content: 'Bold geometric patterns for impactful presentations',
+        position: { x: 20, y: 55, width: 60, height: 18 },
+        style: {
+          fontSize: 14,
+          color: '#dbeafe',
+          fontFamily: 'inter',
+          fontWeight: 'medium',
+          textAlign: 'center'
+        },
+        editable: true
+      }
+    ]
+  },
+  {
+    id: 'geometric-dots',
+    name: 'Gradient Dots',
+    description: 'Circular dot pattern with gradient effects and text enhancement',
+    category: 'geometric',
+    aspectRatio: '9:16',
+    backgroundColor: '#111827',
+    defaultColors: {
+      primary: '#6366f1',
+      secondary: '#a5b4fc',
+      accent: '#f59e0b',
+      text: '#f9fafb',
+      background: '#111827'
+    },
+    defaultFonts: {
+      heading: 'inter',
+      body: 'inter',
+      accent: 'inter'
+    },
+    elements: [
+      // Dot pattern elements
+      {
+        id: 'dot-1',
+        type: 'shape',
+        content: '',
+        position: { x: 10, y: 8, width: 12, height: 12 },
+        style: {
+          backgroundColor: '#4f46e5',
+          borderRadius: 50,
+          color: '#4f46e5',
+          fontFamily: 'inter',
+          fontWeight: 'normal',
+          textAlign: 'center'
+        },
+        editable: false
+      },
+      {
+        id: 'dot-2',
+        type: 'shape',
+        content: '',
+        position: { x: 75, y: 15, width: 8, height: 8 },
+        style: {
+          backgroundColor: '#7c3aed',
+          borderRadius: 50,
+          color: '#7c3aed',
+          fontFamily: 'inter',
+          fontWeight: 'normal',
+          textAlign: 'center'
+        },
+        editable: false
+      },
+      {
+        id: 'dot-3',
+        type: 'shape',
+        content: '',
+        position: { x: 5, y: 25, width: 6, height: 6 },
+        style: {
+          backgroundColor: '#6366f1',
+          borderRadius: 50,
+          color: '#6366f1',
+          fontFamily: 'inter',
+          fontWeight: 'normal',
+          textAlign: 'center'
+        },
+        editable: false
+      },
+      {
+        id: 'dot-4',
+        type: 'shape',
+        content: '',
+        position: { x: 85, y: 35, width: 10, height: 10 },
+        style: {
+          backgroundColor: '#8b5cf6',
+          borderRadius: 50,
+          color: '#8b5cf6',
+          fontFamily: 'inter',
+          fontWeight: 'normal',
+          textAlign: 'center'
+        },
+        editable: false
+      },
+      {
+        id: 'dot-5',
+        type: 'shape',
+        content: '',
+        position: { x: 15, y: 75, width: 14, height: 14 },
+        style: {
+          backgroundColor: '#4f46e5',
+          borderRadius: 50,
+          color: '#4f46e5',
+          fontFamily: 'inter',
+          fontWeight: 'normal',
+          textAlign: 'center'
+        },
+        editable: false
+      },
+      {
+        id: 'dot-6',
+        type: 'shape',
+        content: '',
+        position: { x: 80, y: 85, width: 9, height: 9 },
+        style: {
+          backgroundColor: '#7c3aed',
+          borderRadius: 50,
+          color: '#7c3aed',
+          fontFamily: 'inter',
+          fontWeight: 'normal',
+          textAlign: 'center'
+        },
+        editable: false
+      },
+      // Central text area
+      {
+        id: 'text-backdrop',
+        type: 'shape',
+        content: '',
+        position: { x: 8, y: 42, width: 84, height: 28 },
+        style: {
+          backgroundColor: 'rgba(17, 24, 39, 0.85)',
+          borderRadius: 16,
+          color: 'rgba(17, 24, 39, 0.85)',
+          fontFamily: 'inter',
+          fontWeight: 'normal',
+          textAlign: 'center'
+        },
+        editable: false
+      },
+      {
+        id: 'headline',
+        type: 'text',
+        content: 'Dotted Elegance',
+        position: { x: 10, y: 45, width: 80, height: 8 },
+        style: {
+          fontSize: 26,
+          color: '#f9fafb',
+          fontFamily: 'inter',
+          fontWeight: 'bold',
+          textAlign: 'center'
+        },
+        editable: true
+      },
+      {
+        id: 'content',
+        type: 'text',
+        content: 'Sophisticated patterns that complement your content beautifully',
+        position: { x: 10, y: 60, width: 80, height: 10 },
+        style: {
+          fontSize: 14,
+          color: '#a5b4fc',
+          fontFamily: 'inter',
+          fontWeight: 'medium',
+          textAlign: 'center'
+        },
+        editable: true
+      }
+    ]
+  },
+  {
+    id: 'geometric-triangles',
+    name: 'Triangle Mosaic',
+    description: 'Dynamic triangular mosaic pattern with strategic text placement',
+    category: 'geometric',
+    aspectRatio: '4:3',
+    backgroundColor: '#0c4a6e',
+    defaultColors: {
+      primary: '#0ea5e9',
+      secondary: '#bae6fd',
+      accent: '#fcd34d',
+      text: '#ffffff',
+      background: '#0c4a6e'
+    },
+    defaultFonts: {
+      heading: 'montserrat',
+      body: 'inter',
+      accent: 'montserrat'
+    },
+    elements: [
+      // Triangle pattern elements
+      {
+        id: 'triangle-1',
+        type: 'shape',
+        content: '',
+        position: { x: 5, y: 5, width: 20, height: 25 },
+        style: {
+          backgroundColor: '#075985',
+          borderRadius: 4,
+          color: '#075985',
+          fontFamily: 'inter',
+          fontWeight: 'normal',
+          textAlign: 'center'
+        },
+        editable: false
+      },
+      {
+        id: 'triangle-2',
+        type: 'shape',
+        content: '',
+        position: { x: 75, y: 10, width: 18, height: 20 },
+        style: {
+          backgroundColor: '#0284c7',
+          borderRadius: 3,
+          color: '#0284c7',
+          fontFamily: 'inter',
+          fontWeight: 'normal',
+          textAlign: 'center'
+        },
+        editable: false
+      },
+      {
+        id: 'triangle-3',
+        type: 'shape',
+        content: '',
+        position: { x: 10, y: 70, width: 25, height: 25 },
+        style: {
+          backgroundColor: '#0369a1',
+          borderRadius: 5,
+          color: '#0369a1',
+          fontFamily: 'inter',
+          fontWeight: 'normal',
+          textAlign: 'center'
+        },
+        editable: false
+      },
+      {
+        id: 'triangle-4',
+        type: 'shape',
+        content: '',
+        position: { x: 70, y: 75, width: 22, height: 20 },
+        style: {
+          backgroundColor: '#075985',
+          borderRadius: 4,
+          color: '#075985',
+          fontFamily: 'inter',
+          fontWeight: 'normal',
+          textAlign: 'center'
+        },
+        editable: false
+      },
+      {
+        id: 'triangle-5',
+        type: 'shape',
+        content: '',
+        position: { x: 85, y: 45, width: 12, height: 15 },
+        style: {
+          backgroundColor: '#0284c7',
+          borderRadius: 2,
+          color: '#0284c7',
+          fontFamily: 'inter',
+          fontWeight: 'normal',
+          textAlign: 'center'
+        },
+        editable: false
+      },
+      // Central content area
+      {
+        id: 'content-panel',
+        type: 'shape',
+        content: '',
+        position: { x: 25, y: 35, width: 50, height: 30 },
+        style: {
+          backgroundColor: 'rgba(12, 74, 110, 0.9)',
+          borderRadius: 12,
+          color: 'rgba(12, 74, 110, 0.9)',
+          fontFamily: 'inter',
+          fontWeight: 'normal',
+          textAlign: 'center'
+        },
+        editable: false
+      },
+      {
+        id: 'headline',
+        type: 'text',
+        content: 'Triangle Mosaic',
+        position: { x: 27, y: 40, width: 46, height: 8 },
+        style: {
+          fontSize: 22,
+          color: '#ffffff',
+          fontFamily: 'montserrat',
+          fontWeight: 'bold',
+          textAlign: 'center'
+        },
+        editable: true
+      },
+      {
+        id: 'content',
+        type: 'text',
+        content: 'Geometric precision meets creative expression',
+        position: { x: 27, y: 55, width: 46, height: 10 },
+        style: {
+          fontSize: 13,
+          color: '#bae6fd',
+          fontFamily: 'inter',
+          fontWeight: 'medium',
+          textAlign: 'center'
+        },
+        editable: true
+      }
+    ]
   }
 ]
 
