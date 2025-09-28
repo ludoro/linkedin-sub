@@ -84,10 +84,10 @@ export function TemplateCarouselEditor({ content, contentType, onClose }: Templa
 
   // Generate carousel slides when component mounts
   useEffect(() => {
-    if (content && slides.length === 0) {
+    if (slides.length === 0 && !isGenerating) {
       generateCarousel()
     }
-  }, [content])
+  }, [])
 
   // Auto-select Modern Social template when component mounts
   useEffect(() => {
