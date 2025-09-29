@@ -28,15 +28,28 @@ export const metadata: Metadata = {
   },
 }
 
-export default function RootLayout({
+import { Header } from "@/components/header"
+import { createClient } from "@/lib/supabase/server"
+
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  const supabase = createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
   return (
     <html lang="en">
-      <body className={`font-sans ${inter.variable} ${jetbrainsMono.variable}`}>
-        <Suspense fallback={<div>Loading...</div>}>{children}</Suspense>
+      <body
+        className={`font-sans ${inter.variable} ${jetbrainsMono.variable} flex flex-col min-h-screen`}
+      >
+        <div className="flex flex-col min-h-screen">
+          <Header user={user} />
+          <main className="flex-1">{children}</main>
+        </div>
         <Toaster />
         <Analytics />
       </body>

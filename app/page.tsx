@@ -9,7 +9,6 @@ import { LinkConverter } from "@/components/link-converter"
 export default function HomePage() {
   return (
     <main className="min-h-screen bg-background">
-      <Header />
       <Hero />
       <LinkConverter />
       <Features />
