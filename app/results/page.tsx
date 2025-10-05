@@ -44,7 +44,7 @@ export default function ResultsPage() {
   }, [searchParams])
 
   const handleBackToConverter = () => {
-    router.push("/")
+    router.push("/dashboard")
   }
 
   if (isLoading) {

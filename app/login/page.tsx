@@ -32,7 +32,7 @@ export default function LoginPage() {
         email,
         password,
       })
-      router.push("/dashboard")
+      window.location.href = "/dashboard"
     } catch (error) {
       console.error("Login failed:", error)
       // You might want to show an error message to the user here
