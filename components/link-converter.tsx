@@ -21,6 +21,8 @@ interface ConversionResult {
   title: string
 }
 
+import { MemoryManager } from "./memory-manager"
+
 export function LinkConverter() {
   const router = useRouter()
   const pathname = usePathname()
@@ -145,7 +147,7 @@ export function LinkConverter() {
 
   return (
     <section className="pb-8 px-4">
-      <div className="container mx-auto max-w-4xl">
+      <div className="container mx-auto max-w-6xl">
         <div className="text-center mb-6">
           <h2 className="text-3xl font-bold mb-4">Try It Now</h2>
           <p className="text-muted-foreground">
@@ -155,153 +157,162 @@ export function LinkConverter() {
           </p>
         </div>
 
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              {inputMode === "url" ? (
-                <Link className="h-5 w-5" />
-              ) : (
-                <FileText className="h-5 w-5" />
-              )}
-              {inputMode === "url"
-                ? "Link to Content Converter"
-                : "Text to Content Converter"}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {/* Input Mode Toggle */}
-            <div className="flex items-center gap-2 mb-4">
-              <Button
-                variant={inputMode === "url" ? "default" : "outline"}
-                size="sm"
-                onClick={() => {
-                  setInputMode("url")
-                  setError(null)
-                }}
-                className="flex items-center gap-2"
-              >
-                <Globe className="h-4 w-4" />
-                URL
-              </Button>
-              <Button
-                variant={inputMode === "text" ? "default" : "outline"}
-                size="sm"
-                onClick={() => {
-                  setInputMode("text")
-                  setError(null)
-                }}
-                className="flex items-center gap-2"
-              >
-                <FileText className="h-4 w-4" />
-                Text
-              </Button>
-            </div>
-
-            {inputMode === "url" ? (
-              <div className="space-y-4">
-                <div className="flex gap-2">
-                  <Input
-                    placeholder="https://example.com/article"
-                    value={url}
-                    onChange={(e) => {
-                      setUrl(e.target.value)
+        <div className="flex gap-6">
+          <div className="w-1/3">
+            <MemoryManager />
+          </div>
+          <div className="w-2/3">
+            <Card className="mb-6">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  {inputMode === "url" ? (
+                    <Link className="h-5 w-5" />
+                  ) : (
+                    <FileText className="h-5 w-5" />
+                  )}
+                  {inputMode === "url"
+                    ? "Link to Content Converter"
+                    : "Text to Content Converter"}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {/* Input Mode Toggle */}
+                <div className="flex items-center gap-2 mb-4">
+                  <Button
+                    variant={inputMode === "url" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => {
+                      setInputMode("url")
                       setError(null)
                     }}
-                    onKeyPress={handleKeyPress}
-                    className="flex-1"
-                    disabled={isLoading}
-                  />
-                  <Button
-                    onClick={() => {
-                      console.log("Button clicked!")
-                      handleConvert()
-                    }}
-                    disabled={!url || isLoading || !isValidUrl(url)}
-                    className="min-w-[120px]"
+                    className="flex items-center gap-2"
                   >
-                    {isLoading ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Converting
-                      </>
-                    ) : (
-                      "Convert"
-                    )}
+                    <Globe className="h-4 w-4" />
+                    URL
+                  </Button>
+                  <Button
+                    variant={inputMode === "text" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => {
+                      setInputMode("text")
+                      setError(null)
+                    }}
+                    className="flex items-center gap-2"
+                  >
+                    <FileText className="h-4 w-4" />
+                    Text
                   </Button>
                 </div>
 
-                <div className="space-y-2">
-                  <label className="text-sm font-medium flex items-center gap-2">
-                    <Type className="h-4 w-4" />
-                    Text Style Prompt (Optional)
-                  </label>
-                  <Textarea
-                    placeholder="e.g., Make it casual and friendly, use emojis, target young professionals..."
-                    value={textPrompt}
-                    onChange={(e) => setTextPrompt(e.target.value)}
-                    className="min-h-[80px]"
-                    disabled={isLoading}
-                  />
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Article Text</label>
-                  <Textarea
-                    placeholder="Paste your article text here..."
-                    value={articleText}
-                    onChange={(e) => {
-                      setArticleText(e.target.value)
-                      setError(null)
-                    }}
-                    className="min-h-[200px]"
-                    disabled={isLoading}
-                  />
-                </div>
+                {inputMode === "url" ? (
+                  <div className="space-y-4">
+                    <div className="flex gap-2">
+                      <Input
+                        placeholder="https://example.com/article"
+                        value={url}
+                        onChange={(e) => {
+                          setUrl(e.target.value)
+                          setError(null)
+                        }}
+                        onKeyPress={handleKeyPress}
+                        className="flex-1"
+                        disabled={isLoading}
+                      />
+                      <Button
+                        onClick={() => {
+                          console.log("Button clicked!")
+                          handleConvert()
+                        }}
+                        disabled={!url || isLoading || !isValidUrl(url)}
+                        className="min-w-[120px]"
+                      >
+                        {isLoading ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Converting
+                          </>
+                        ) : (
+                          "Convert"
+                        )}
+                      </Button>
+                    </div>
 
-                <div className="space-y-2">
-                  <label className="text-sm font-medium flex items-center gap-2">
-                    <Type className="h-4 w-4" />
-                    Text Style Prompt (Optional)
-                  </label>
-                  <Textarea
-                    placeholder="e.g., Make it casual and friendly, use emojis, target young professionals..."
-                    value={textPrompt}
-                    onChange={(e) => setTextPrompt(e.target.value)}
-                    className="min-h-[80px]"
-                    disabled={isLoading}
-                  />
-                </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium flex items-center gap-2">
+                        <Type className="h-4 w-4" />
+                        Text Style Prompt (Optional)
+                      </label>
+                      <Textarea
+                        placeholder="e.g., Make it casual and friendly, use emojis, target young professionals..."
+                        value={textPrompt}
+                        onChange={(e) => setTextPrompt(e.target.value)}
+                        className="min-h-[80px]"
+                        disabled={isLoading}
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">
+                        Article Text
+                      </label>
+                      <Textarea
+                        placeholder="Paste your article text here..."
+                        value={articleText}
+                        onChange={(e) => {
+                          setArticleText(e.target.value)
+                          setError(null)
+                        }}
+                        className="min-h-[200px]"
+                        disabled={isLoading}
+                      />
+                    </div>
 
-                <Button
-                  onClick={() => {
-                    console.log("Button clicked!")
-                    handleConvert()
-                  }}
-                  disabled={!articleText.trim() || isLoading}
-                  className="w-full"
-                >
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Converting
-                    </>
-                  ) : (
-                    "Convert"
-                  )}
-                </Button>
-              </div>
-            )}
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium flex items-center gap-2">
+                        <Type className="h-4 w-4" />
+                        Text Style Prompt (Optional)
+                      </label>
+                      <Textarea
+                        placeholder="e.g., Make it casual and friendly, use emojis, target young professionals..."
+                        value={textPrompt}
+                        onChange={(e) => setTextPrompt(e.target.value)}
+                        className="min-h-[80px]"
+                        disabled={isLoading}
+                      />
+                    </div>
 
-            {error && (
-              <Alert variant="destructive">
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
-          </CardContent>
-        </Card>
+                    <Button
+                      onClick={() => {
+                        console.log("Button clicked!")
+                        handleConvert()
+                      }}
+                      disabled={!articleText.trim() || isLoading}
+                      className="w-full"
+                    >
+                      {isLoading ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Converting
+                        </>
+                      ) : (
+                        "Convert"
+                      )}
+                    </Button>
+                  </div>
+                )}
+
+                {error && (
+                  <Alert variant="destructive">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>{error}</AlertDescription>
+                  </Alert>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </div>
       </div>
     </section>
   )
