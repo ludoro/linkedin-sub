@@ -46,70 +46,38 @@ export async function POST(request: NextRequest) {
 
     console.log("Generating content with Gemini...")
 
-    let socialPrompt: string
-    let newsletterPrompt: string
-
-    const memoryPrompt =
+    const baseRequirements = `
+    - Avoid AI slop, you MUST sound like a real human, not AI.
+    - No over-the-top superlatives.
+    ${
       memories && memories.length > 0
-        ? `
-- Emulate the writing style, tone, and voice from the following examples:
-${memories.map((m: string) => `- "${m}"`).join("\n")}
-`
+        ? `- Emulate the writing style, tone, and voice from the following examples:\n${memories.map((m: string) => `- "${m}"`).join("\n")}`
         : ""
-
-    if (mode === "url") {
-      socialPrompt = `Create an engaging social media post from the content at ${url}. 
-      Requirements:
-      - Focus on the key insight or value proposition
-      - Use an engaging hook or question if appropriate
-      - Never include any hashtags
-      - The post must have 4 paragraphs.
-      - Use a bullet point list if appropriate.
-      - Avoid AI slop, you MUST sounds like a real human, not AI.
-      - No over the top superlatives.
-      ${memoryPrompt}
-      Generate only the social media post, no additional text:`
-
-      newsletterPrompt = `Transform the content at ${url} into a well-structured newsletter article. Requirements:
-      - Start with a TLDR summary.
-      - Follow up with an "Introduction" section explaining the setting and the context.
-      - Then, 1 2 or 3 sections with the main points of the URL.
-      - Avoid AI slop, you MUST sounds like a real human, not AI.
-      - No over the top superlatives.
-      - Make sure to outline tradeoffs if you see them.
-      - Close with a main takeaway section for MLEs.
-      ${memoryPrompt}
-      Generate only the newsletter content, no additional text:`
-    } else {
-      socialPrompt = `Create an engaging social media post from the following article text. 
-      ${articleText}
-      Requirements:
-      - Focus on the key insight or value proposition
-      - Use an engaging hook or question if appropriate
-      - Never include any hashtags
-      - The post must have 4 paragraphs.
-      - Use a bullet point list if appropriate.
-      - Avoid AI slop, you MUST sounds like a real human, not AI.
-      - No over the top superlatives.
-      ${memoryPrompt}
-      Generate only the social media post, no additional text:`
-
-      newsletterPrompt = `Transform the following article text into a well-structured newsletter. 
-      Article text:
-      ${articleText}
-      Requirements:
-      - Start with a TLDR summary.
-      - Follow up with an "Introduction" section explaining the setting and the context.
-      - Then, 1 2 or 3 sections with the main points of the URL.
-      - Avoid AI slop, you MUST sounds like a real human, not AI.
-      - No over the top superlatives.
-      - Make sure to outline tradeoffs if you see them.
-      - Close with a main takeaway section for MLEs.
-      ${memoryPrompt}
-      Article text:
-      
-      Generate only the newsletter content, no additional text:`
     }
+  `;
+
+  const sourceContent = mode === "url" ? `the content at ${url}` : `the following article text:\n${articleText}`;
+
+  const socialPrompt = `Create an engaging social media post from ${sourceContent}. 
+    Requirements:
+    - Focus on the key insight or value proposition
+    - Use an engaging hook or question if appropriate
+    - Never include any hashtags
+    - The post must have 4 paragraphs.
+    - Use a bullet point list if appropriate.
+    ${baseRequirements}
+    Generate only the social media post, no additional text:`;
+
+  const newsletterPrompt = `Transform ${sourceContent} into a well-structured newsletter article. 
+    Requirements:
+    - Start with a TLDR summary.
+    - Follow up with an "Introduction" section explaining the setting and the context.
+    - One, two or three sections with the main points depending on the complexity of the content.
+    - Make sure to outline tradeoffs if you see them.
+    - Close with a main takeaway section for MLEs.
+    - The newsletter should have minimum 1500 characters.
+    ${baseRequirements}
+    Generate only the newsletter content, no additional text:`;
 
     const [socialResult, newsletterResult] = await Promise.all([
       ai.models.generateContent({
