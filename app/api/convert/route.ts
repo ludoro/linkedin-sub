@@ -77,7 +77,7 @@ ${memories.map((m: string) => `- "${m}"`).join("\n")}
       - Avoid AI slop, you MUST sounds like a real human, not AI.
       - No over the top superlatives.
       - Make sure to outline tradeoffs if you see them.
-      - You are an expert MLE in the field.
+      - Close with a main takeaway section for MLEs.
       ${memoryPrompt}
       Generate only the newsletter content, no additional text:`
     } else {
@@ -98,12 +98,13 @@ ${memories.map((m: string) => `- "${m}"`).join("\n")}
       Article text:
       ${articleText}
       Requirements:
-      - Start with a compelling hook or introduction
-      - Present 3-4 key points or insights
-      - Include actionable takeaways
-      - End with a thought-provoking conclusion
-      - Keep it concise but informative (200-400 words)
-      - Use a conversational, engaging tone
+      - Start with a TLDR summary.
+      - Follow up with an "Introduction" section explaining the setting and the context.
+      - Then, 1 2 or 3 sections with the main points of the URL.
+      - Avoid AI slop, you MUST sounds like a real human, not AI.
+      - No over the top superlatives.
+      - Make sure to outline tradeoffs if you see them.
+      - Close with a main takeaway section for MLEs.
       ${memoryPrompt}
       Article text:
       
