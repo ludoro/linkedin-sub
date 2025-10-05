@@ -6,13 +6,7 @@ import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
 import type { User } from "@supabase/supabase-js"
 
-export function Header({
-  user,
-  loading,
-}: {
-  user: User | null
-  loading: boolean
-}) {
+export function Header({ user }: { user: User | null }) {
   const router = useRouter()
   const supabase = createClient()
 
@@ -30,9 +24,7 @@ export function Header({
         </Link>
 
         <nav className="hidden md:flex items-center gap-2">
-          {loading ? (
-            <div className="h-8 w-24 bg-muted rounded-md animate-pulse" />
-          ) : user ? (
+          {user ? (
             <div className="flex items-center gap-4">
               <span className="text-sm text-muted-foreground">
                 {user.email}

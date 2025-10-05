@@ -12,6 +12,9 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Link, Loader2, AlertCircle, Type, FileText, Globe } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 
+import { createClient } from "@/lib/supabase/client"
+import { usePathname } from "next/navigation"
+
 interface ConversionResult {
   socialPost: string
   newsletter: string
@@ -20,6 +23,7 @@ interface ConversionResult {
 
 export function LinkConverter() {
   const router = useRouter()
+  const pathname = usePathname()
   const [inputMode, setInputMode] = useState<"url" | "text">("url")
   const [url, setUrl] = useState("")
   const [articleText, setArticleText] = useState("")
@@ -38,6 +42,18 @@ export function LinkConverter() {
   }
 
   const handleConvert = async () => {
+    if (pathname === "/") {
+      const supabase = createClient()
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+
+      if (!user) {
+        router.push("/login")
+        return
+      }
+    }
+
     console.log("Convert button clicked, mode:", inputMode)
 
     if (inputMode === "url") {
@@ -66,9 +82,10 @@ export function LinkConverter() {
 
     try {
       console.log("Making API request to /api/convert")
-      const requestBody = inputMode === "url" 
-        ? { url, textPrompt, mode: "url" }
-        : { articleText, textPrompt, mode: "text" }
+      const requestBody =
+        inputMode === "url"
+          ? { url, textPrompt, mode: "url" }
+          : { articleText, textPrompt, mode: "text" }
 
       const response = await fetch("/api/convert", {
         method: "POST",
@@ -88,24 +105,26 @@ export function LinkConverter() {
 
       const data = await response.json()
       console.log("API success response:", data)
-      
+
       // Navigate to results page with the generated content
       const params = new URLSearchParams({
         title: encodeURIComponent(data.title),
         socialPost: encodeURIComponent(data.socialPost),
         newsletter: encodeURIComponent(data.newsletter),
-        ...(inputMode === "url" && url && { originalUrl: encodeURIComponent(url) })
+        ...(inputMode === "url" &&
+          url && { originalUrl: encodeURIComponent(url) }),
       })
-      
+
       router.push(`/results?${params.toString()}`)
-      
+
       toast({
         title: "Conversion successful",
         description: "Redirecting to results page...",
       })
     } catch (error) {
       console.log("Conversion error:", error)
-      const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred"
+      const errorMessage =
+        error instanceof Error ? error.message : "An unexpected error occurred"
       setError(errorMessage)
       toast({
         title: "Conversion failed",
@@ -124,25 +143,29 @@ export function LinkConverter() {
     }
   }
 
-
   return (
     <section className="pb-8 px-4">
       <div className="container mx-auto max-w-4xl">
         <div className="text-center mb-6">
           <h2 className="text-3xl font-bold mb-4">Try It Now</h2>
           <p className="text-muted-foreground">
-            {inputMode === "url" 
+            {inputMode === "url"
               ? "Paste any link and watch AI transform it into engaging content"
-              : "Paste your article text and watch AI transform it into engaging content"
-            }
+              : "Paste your article text and watch AI transform it into engaging content"}
           </p>
         </div>
 
         <Card className="mb-6">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              {inputMode === "url" ? <Link className="h-5 w-5" /> : <FileText className="h-5 w-5" />}
-              {inputMode === "url" ? "Link to Content Converter" : "Text to Content Converter"}
+              {inputMode === "url" ? (
+                <Link className="h-5 w-5" />
+              ) : (
+                <FileText className="h-5 w-5" />
+              )}
+              {inputMode === "url"
+                ? "Link to Content Converter"
+                : "Text to Content Converter"}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -206,7 +229,7 @@ export function LinkConverter() {
                     )}
                   </Button>
                 </div>
-                
+
                 <div className="space-y-2">
                   <label className="text-sm font-medium flex items-center gap-2">
                     <Type className="h-4 w-4" />
@@ -224,9 +247,7 @@ export function LinkConverter() {
             ) : (
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">
-                    Article Text
-                  </label>
+                  <label className="text-sm font-medium">Article Text</label>
                   <Textarea
                     placeholder="Paste your article text here..."
                     value={articleText}
@@ -238,7 +259,7 @@ export function LinkConverter() {
                     disabled={isLoading}
                   />
                 </div>
-                
+
                 <div className="space-y-2">
                   <label className="text-sm font-medium flex items-center gap-2">
                     <Type className="h-4 w-4" />
@@ -252,7 +273,7 @@ export function LinkConverter() {
                     disabled={isLoading}
                   />
                 </div>
-                
+
                 <Button
                   onClick={() => {
                     console.log("Button clicked!")
