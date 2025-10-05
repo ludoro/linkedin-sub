@@ -7,7 +7,7 @@ const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! })
 export async function POST(request: NextRequest) {
   try {
     console.log("API route called")
-    const { url, articleText, mode } = await request.json()
+    const { url, articleText, mode, memories } = await request.json()
     console.log("Mode:", mode)
     console.log("URL received:", url)
     console.log("Article text length:", articleText?.length || 0)
@@ -49,6 +49,14 @@ export async function POST(request: NextRequest) {
     let socialPrompt: string
     let newsletterPrompt: string
 
+    const memoryPrompt =
+      memories && memories.length > 0
+        ? `
+- Emulate the writing style, tone, and voice from the following examples:
+${memories.map((m: string) => `- "${m}"`).join("\n")}
+`
+        : ""
+
     if (mode === "url") {
       socialPrompt = `Create an engaging social media post from the content at ${url}. Requirements:
       - Keep it under 280 characters
@@ -56,7 +64,7 @@ export async function POST(request: NextRequest) {
       - Include 2-3 relevant hashtags
       - Focus on the key insight or value proposition
       - Use an engaging hook or question if appropriate
-      
+      ${memoryPrompt}
       Generate only the social media post, no additional text:`
 
       newsletterPrompt = `Transform the content at ${url} into a well-structured newsletter section. Requirements:
@@ -66,7 +74,7 @@ export async function POST(request: NextRequest) {
       - End with a thought-provoking conclusion
       - Keep it concise but informative (200-400 words)
       - Use a conversational, engaging tone
-      
+      ${memoryPrompt}
       Generate only the newsletter content, no additional text:`
     } else {
       socialPrompt = `Create an engaging social media post from the following article text. Requirements:
@@ -75,8 +83,7 @@ export async function POST(request: NextRequest) {
       - Include 2-3 relevant hashtags
       - Focus on the key insight or value proposition
       - Use an engaging hook or question if appropriate
-      ${textPrompt ? `- Additional style requirements: ${textPrompt}` : ""}
-      
+      ${memoryPrompt}
       Article text:
       ${articleText}
       
@@ -89,8 +96,7 @@ export async function POST(request: NextRequest) {
       - End with a thought-provoking conclusion
       - Keep it concise but informative (200-400 words)
       - Use a conversational, engaging tone
-      ${textPrompt ? `- Additional style requirements: ${textPrompt}` : ""}
-      
+      ${memoryPrompt}
       Article text:
       ${articleText}
       

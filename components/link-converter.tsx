@@ -6,6 +6,8 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
@@ -29,6 +31,7 @@ export function LinkConverter() {
   const [inputMode, setInputMode] = useState<"url" | "text">("url")
   const [url, setUrl] = useState("")
   const [articleText, setArticleText] = useState("")
+  const [useMemory, setUseMemory] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const { toast } = useToast()
@@ -82,11 +85,26 @@ export function LinkConverter() {
     setError(null)
 
     try {
+      let memories: string[] = []
+      if (useMemory) {
+        const response = await fetch("/api/memory/get")
+        if (response.ok) {
+          const data = await response.json()
+          memories = data.memories
+        } else {
+          toast({
+            title: "Error",
+            description: "Failed to fetch memories.",
+            variant: "destructive",
+          })
+        }
+      }
+
       console.log("Making API request to /api/convert")
       const requestBody =
         inputMode === "url"
-          ? { url, mode: "url" }
-          : { articleText, mode: "text" }
+          ? { url, mode: "url", memories }
+          : { articleText, mode: "text", memories }
 
       const response = await fetch("/api/convert", {
         method: "POST",
@@ -201,6 +219,15 @@ export function LinkConverter() {
                     <FileText className="h-4 w-4" />
                     Text
                   </Button>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    id="use-memory"
+                    checked={useMemory}
+                    onCheckedChange={setUseMemory}
+                  />
+                  <Label htmlFor="use-memory">Use Memory</Label>
                 </div>
 
                 {inputMode === "url" ? (
