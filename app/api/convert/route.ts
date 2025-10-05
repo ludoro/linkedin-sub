@@ -46,14 +46,28 @@ export async function POST(request: NextRequest) {
 
     console.log("Generating content with Gemini...")
 
+    let memoryStyle = ""
+    if (memories && memories.length > 0) {
+      if (memories.length > 10) {
+        const stylePrompt = `Analyze the following writing examples and generate an incredibly detailed description of the writing style, tone, and voice.
+
+        Examples:\n${memories.map((m: string) => `- "${m}"`).join("\n")}
+
+        Description:`
+        const styleResult = await ai.models.generateContent({
+          model: "gemini-2.5-flash",
+          contents: [stylePrompt],
+        })
+        memoryStyle = `- Emulate the following writing style, tone, and voice:\n${styleResult.text}`
+      } else {
+        memoryStyle = `- Emulate the writing style, tone, and voice from the following examples:\n${memories.map((m: string) => `- "${m}"`).join("\n")}`
+      }
+    }
+
     const baseRequirements = `
     - Avoid AI slop, you MUST sound like a real human, not AI.
     - No over-the-top superlatives.
-    ${
-      memories && memories.length > 0
-        ? `- Emulate the writing style, tone, and voice from the following examples:\n${memories.map((m: string) => `- "${m}"`).join("\n")}`
-        : ""
-    }
+    ${memoryStyle}
   `;
 
   const sourceContent = mode === "url" ? `the content at ${url}` : `the following article text:\n${articleText}`;
