@@ -7,11 +7,10 @@ const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! })
 export async function POST(request: NextRequest) {
   try {
     console.log("API route called")
-    const { url, articleText, textPrompt, mode } = await request.json()
+    const { url, articleText, mode } = await request.json()
     console.log("Mode:", mode)
     console.log("URL received:", url)
     console.log("Article text length:", articleText?.length || 0)
-    console.log("Text prompt:", textPrompt)
 
     if (mode === "url") {
       if (!url) {
@@ -57,7 +56,6 @@ export async function POST(request: NextRequest) {
       - Include 2-3 relevant hashtags
       - Focus on the key insight or value proposition
       - Use an engaging hook or question if appropriate
-      ${textPrompt ? `- Additional style requirements: ${textPrompt}` : ""}
       
       Generate only the social media post, no additional text:`
 
@@ -68,7 +66,6 @@ export async function POST(request: NextRequest) {
       - End with a thought-provoking conclusion
       - Keep it concise but informative (200-400 words)
       - Use a conversational, engaging tone
-      ${textPrompt ? `- Additional style requirements: ${textPrompt}` : ""}
       
       Generate only the newsletter content, no additional text:`
     } else {

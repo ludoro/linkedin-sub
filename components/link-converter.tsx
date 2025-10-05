@@ -29,7 +29,6 @@ export function LinkConverter() {
   const [inputMode, setInputMode] = useState<"url" | "text">("url")
   const [url, setUrl] = useState("")
   const [articleText, setArticleText] = useState("")
-  const [textPrompt, setTextPrompt] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const { toast } = useToast()
@@ -86,8 +85,8 @@ export function LinkConverter() {
       console.log("Making API request to /api/convert")
       const requestBody =
         inputMode === "url"
-          ? { url, textPrompt, mode: "url" }
-          : { articleText, textPrompt, mode: "text" }
+          ? { url, mode: "url" }
+          : { articleText, mode: "text" }
 
       const response = await fetch("/api/convert", {
         method: "POST",
@@ -236,20 +235,6 @@ export function LinkConverter() {
                         )}
                       </Button>
                     </div>
-
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium flex items-center gap-2">
-                        <Type className="h-4 w-4" />
-                        Text Style Prompt (Optional)
-                      </label>
-                      <Textarea
-                        placeholder="e.g., Make it casual and friendly, use emojis, target young professionals..."
-                        value={textPrompt}
-                        onChange={(e) => setTextPrompt(e.target.value)}
-                        className="min-h-[80px]"
-                        disabled={isLoading}
-                      />
-                    </div>
                   </div>
                 ) : (
                   <div className="space-y-4">
@@ -265,20 +250,6 @@ export function LinkConverter() {
                           setError(null)
                         }}
                         className="min-h-[200px]"
-                        disabled={isLoading}
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium flex items-center gap-2">
-                        <Type className="h-4 w-4" />
-                        Text Style Prompt (Optional)
-                      </label>
-                      <Textarea
-                        placeholder="e.g., Make it casual and friendly, use emojis, target young professionals..."
-                        value={textPrompt}
-                        onChange={(e) => setTextPrompt(e.target.value)}
-                        className="min-h-[80px]"
                         disabled={isLoading}
                       />
                     </div>
