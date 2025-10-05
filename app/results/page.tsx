@@ -2,7 +2,7 @@
 
 import { useSearchParams, useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
-import { Header } from "@/components/header"
+import { HeaderWithUser } from "@/components/header-with-user"
 import { ContentOutput } from "@/components/content-output"
 import { Button } from "@/components/ui/button"
 import { ArrowLeft, Loader2 } from "lucide-react"
@@ -48,7 +48,7 @@ export default function ResultsPage() {
   if (isLoading) {
     return (
       <main className="min-h-screen bg-background">
-        <Header />
+        <HeaderWithUser />
         <div className="container mx-auto max-w-4xl px-4 py-8">
           <div className="flex items-center justify-center min-h-[400px]">
             <div className="flex items-center gap-2">
@@ -64,7 +64,7 @@ export default function ResultsPage() {
   if (error || !content) {
     return (
       <main className="min-h-screen bg-background">
-        <Header />
+        <HeaderWithUser />
         <div className="container mx-auto max-w-4xl px-4 py-8">
           <div className="text-center space-y-4">
             <h1 className="text-2xl font-bold text-destructive">Error</h1>
@@ -81,7 +81,7 @@ export default function ResultsPage() {
 
   return (
     <main className="min-h-screen bg-background">
-      <Header />
+      <HeaderWithUser />
       <div className="container mx-auto max-w-7xl px-4 py-8">
         <div className="mb-6">
           <Button 

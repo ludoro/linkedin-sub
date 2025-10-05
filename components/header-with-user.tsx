@@ -7,6 +7,7 @@ import { Header } from "@/components/header"
 
 export function HeaderWithUser() {
   const [user, setUser] = useState<User | null>(null)
+  const [loading, setLoading] = useState(true)
   const supabase = createClient()
 
   useEffect(() => {
@@ -15,10 +16,11 @@ export function HeaderWithUser() {
         data: { user },
       } = await supabase.auth.getUser()
       setUser(user)
+      setLoading(false)
     }
 
     fetchUser()
   }, [supabase.auth])
 
-  return <Header user={user} />
+  return <Header user={user} loading={loading} />
 }
