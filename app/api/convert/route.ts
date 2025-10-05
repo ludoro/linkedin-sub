@@ -58,38 +58,46 @@ ${memories.map((m: string) => `- "${m}"`).join("\n")}
         : ""
 
     if (mode === "url") {
-      socialPrompt = `Create an engaging social media post from the content at ${url}. Requirements:
-      - Keep it under 280 characters
-      - Make it compelling and shareable
-      - Include 2-3 relevant hashtags
+      socialPrompt = `Create an engaging social media post from the content at ${url}. 
+      Requirements:
       - Focus on the key insight or value proposition
       - Use an engaging hook or question if appropriate
+      - Never include any hashtags
+      - The post must have 4 paragraphs.
+      - Use a bullet point list if appropriate.
+      - Avoid AI slop, you MUST sounds like a real human, not AI.
+      - No over the top superlatives.
       ${memoryPrompt}
       Generate only the social media post, no additional text:`
 
-      newsletterPrompt = `Transform the content at ${url} into a well-structured newsletter section. Requirements:
-      - Start with a compelling hook or introduction
-      - Present 3-4 key points or insights
-      - Include actionable takeaways
-      - End with a thought-provoking conclusion
-      - Keep it concise but informative (200-400 words)
-      - Use a conversational, engaging tone
+      newsletterPrompt = `Transform the content at ${url} into a well-structured newsletter article. Requirements:
+      - Start with a TLDR summary.
+      - Follow up with an "Introduction" section explaining the setting and the context.
+      - Then, 1 2 or 3 sections with the main points of the URL.
+      - Avoid AI slop, you MUST sounds like a real human, not AI.
+      - No over the top superlatives.
+      - Make sure to outline tradeoffs if you see them.
+      - You are an expert MLE in the field.
       ${memoryPrompt}
       Generate only the newsletter content, no additional text:`
     } else {
-      socialPrompt = `Create an engaging social media post from the following article text. Requirements:
-      - Keep it under 280 characters
-      - Make it compelling and shareable
-      - Include 2-3 relevant hashtags
+      socialPrompt = `Create an engaging social media post from the following article text. 
+      ${articleText}
+      Requirements:
       - Focus on the key insight or value proposition
       - Use an engaging hook or question if appropriate
+      - Never include any hashtags
+      - The post must have 4 paragraphs.
+      - Use a bullet point list if appropriate.
+      - Avoid AI slop, you MUST sounds like a real human, not AI.
+      - No over the top superlatives.
       ${memoryPrompt}
-      Article text:
-      ${articleText}
-      
       Generate only the social media post, no additional text:`
 
-      newsletterPrompt = `Transform the following article text into a well-structured newsletter section. Requirements:
+      newsletterPrompt = `Transform the following article text into a well-structured newsletter. 
+      Article text:
+      ${articleText}
+      Requirements:
       - Start with a compelling hook or introduction
       - Present 3-4 key points or insights
       - Include actionable takeaways
@@ -98,7 +106,6 @@ ${memories.map((m: string) => `- "${m}"`).join("\n")}
       - Use a conversational, engaging tone
       ${memoryPrompt}
       Article text:
-      ${articleText}
       
       Generate only the newsletter content, no additional text:`
     }
