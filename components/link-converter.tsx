@@ -1,29 +1,63 @@
 "use client"
 
-import type React from "react"
-
-import { useState } from "react"
-import { useRouter } from "next/navigation"
+import React, { useState, useEffect } from "react"
+import { useRouter, usePathname } from "next/navigation"
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Link, Loader2, AlertCircle, Type, FileText, Globe } from "lucide-react"
-import { useToast } from "@/hooks/use-toast"
-
-import { createClient } from "@/lib/supabase/client"
-import { usePathname } from "next/navigation"
+import { Switch } from "@/components/ui/switch"
+import { Label } from "@/components/ui/label"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import {
+  Loader2,
+  AlertCircle,
+  Link,
+  FileText,
+  Globe,
+} from "lucide-react"
+import { useToast } from "@/components/ui/use-toast"
+import { MemoryManager } from "./memory-manager"
+import { PromptManager } from "./prompt-manager"
 
 interface ConversionResult {
-  socialPost: string
-  newsletter: string
   title: string
+  summary: string
+  hashtags: string[]
+  instagram_caption: string
+  tweet: string
+  linkedin_post: string
+  blog_post: string
+  email_newsletter: string
+  seo_keywords: string[]
+  image_prompt: string
+  carousel_data: {
+    title: string
+    summary: string
+    items: {
+      title: string
+      description: string
+    }[]
+  }
 }
 
-import { MemoryManager } from "./memory-manager"
+interface Prompt {
+  id: string
+  title: string
+  prompt_text: string
+}
 
 export function LinkConverter() {
   const router = useRouter()
@@ -32,9 +66,31 @@ export function LinkConverter() {
   const [url, setUrl] = useState("")
   const [articleText, setArticleText] = useState("")
   const [useMemory, setUseMemory] = useState(false)
+  const [prompts, setPrompts] = useState<Prompt[]>([])
+  const [selectedPrompt, setSelectedPrompt] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const { toast } = useToast()
+
+  useEffect(() => {
+    const fetchPrompts = async () => {
+      try {
+        const response = await fetch("/api/prompts/get")
+        if (!response.ok) {
+          throw new Error("Failed to fetch prompts.")
+        }
+        const data = await response.json()
+        setPrompts(data.prompts)
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "Failed to fetch prompts. Please try again.",
+          variant: "destructive",
+        })
+      }
+    }
+    fetchPrompts()
+  }, [toast])
 
   const isValidUrl = (string: string) => {
     try {
@@ -42,6 +98,14 @@ export function LinkConverter() {
       return true
     } catch (_) {
       return false
+    }
+  }
+
+  const handlePromptSelect = (prompt: string) => {
+    if (prompt === "--none--") {
+      setSelectedPrompt(null)
+    } else {
+      setSelectedPrompt(prompt)
     }
   }
 
@@ -93,8 +157,8 @@ export function LinkConverter() {
       console.log("Making API request to /api/convert")
       const requestBody =
         inputMode === "url"
-          ? { url, mode: "url", memories }
-          : { articleText, mode: "text", memories }
+          ? { url, mode: "url", memories, prompt: selectedPrompt }
+          : { articleText, mode: "text", memories, prompt: selectedPrompt }
 
       const response = await fetch("/api/convert", {
         method: "POST",
@@ -172,8 +236,13 @@ export function LinkConverter() {
 
 
         <div className="flex gap-6">
-          <div className="w-1/3">
+          <div className="w-1/3 space-y-6">
             <MemoryManager />
+            <PromptManager
+              prompts={prompts}
+              onPromptSelect={handlePromptSelect}
+              setPrompts={setPrompts}
+            />
           </div>
           <div className="w-2/3">
             <Card className="mb-6">
@@ -225,6 +294,26 @@ export function LinkConverter() {
                     onCheckedChange={setUseMemory}
                   />
                   <Label htmlFor="use-memory">Use Memory</Label>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="prompt-select">Select a Prompt</Label>
+                  <Select
+                    onValueChange={handlePromptSelect}
+                    value={selectedPrompt ?? "--none--"}
+                  >
+                    <SelectTrigger id="prompt-select">
+                      <SelectValue placeholder="Select a prompt" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="--none--">No prompt (default)</SelectItem>
+                      {prompts.map((prompt) => (
+                        <SelectItem key={prompt.id} value={prompt.prompt_text}>
+                          {prompt.title}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 {inputMode === "url" ? (
