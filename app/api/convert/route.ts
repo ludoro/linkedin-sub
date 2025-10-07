@@ -47,24 +47,11 @@ export async function POST(request: NextRequest) {
     console.log("Generating content with Gemini...")
 
     let sourceContent: string;
-    let isSummary = false;
 
     if (mode === "url") {
       sourceContent = `the content at ${url}`;
     } else {
-      if (articleText.length > 15000) {
-        console.log("Article text is long, generating summary first...");
-        isSummary = true;
-        const summaryPrompt = `Summarize the following article text into a concise summary of around 300-400 words, extracting the key points and main arguments. Text to summarize:\n${articleText}`;
-        const summaryResult = await ai.models.generateContent({
-          model: "gemini-2.5-flash",
-          contents: [summaryPrompt],
-        });
-        sourceContent = summaryResult.text?.trim() || articleText;
-        console.log("Summary generated, length:", sourceContent.length);
-      } else {
-        sourceContent = `the following article text:\n${articleText}`;
-      }
+      sourceContent = `the following article text:\n${articleText}`;
     }
 
     let memoryStyle = ""
@@ -91,9 +78,7 @@ export async function POST(request: NextRequest) {
     ${memoryStyle}
   `;
 
-  const contentDescription = isSummary ? `the following summary of an article:\n${sourceContent}` : sourceContent;
-
-  const socialPrompt = `Create an engaging social media post from ${contentDescription}. 
+  const socialPrompt = `Create an engaging social media post from ${sourceContent}. 
     Requirements:
     - Focus on the key insight or value proposition
     - Use an engaging hook or question if appropriate
@@ -103,7 +88,7 @@ export async function POST(request: NextRequest) {
     ${baseRequirements}
     Generate only the social media post, no additional text:`;
 
-  const newsletterPrompt = `Transform ${contentDescription} into a well-structured newsletter article. 
+  const newsletterPrompt = `Transform ${sourceContent} into a well-structured newsletter article. 
     Requirements:
     - Start with a TLDR summary.
     - Follow up with an "Introduction" section explaining the setting and the context.
