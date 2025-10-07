@@ -7,7 +7,7 @@ const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! })
 export async function POST(request: NextRequest) {
   try {
     console.log("API route called")
-    const { url, articleText, mode, memories } = await request.json()
+    const { url, articleText, mode, memories, prompt } = await request.json()
     console.log("Mode:", mode)
     console.log("URL received:", url)
     console.log("Article text length:", articleText?.length || 0)
@@ -76,7 +76,10 @@ export async function POST(request: NextRequest) {
     - Avoid AI slop, you MUST sound like a real human, not AI.
     - No over-the-top superlatives.
     ${memoryStyle}
+    ${prompt ? `- ${prompt}` : ""}
   `;
+
+  console.log("Base requirements:", baseRequirements)
 
   const socialPrompt = `Create an engaging social media post from ${sourceContent}. 
     Requirements:
