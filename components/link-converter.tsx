@@ -115,16 +115,30 @@ export function LinkConverter() {
       const data = await response.json()
       console.log("API success response:", data)
 
-      // Navigate to results page with the generated content
-      const params = new URLSearchParams({
-        title: encodeURIComponent(data.title),
-        socialPost: encodeURIComponent(data.socialPost),
-        newsletter: encodeURIComponent(data.newsletter),
-        ...(inputMode === "url" &&
-          url && { originalUrl: encodeURIComponent(url) }),
-      })
+      const saveData = async (data: ConversionResult) => {
+        const response = await fetch("/api/results", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            ...data,
+            ...(inputMode === "url" &&
+              url && { originalUrl: url }),
+          }),
+        });
 
-      router.push(`/results?${params.toString()}`)
+        if (!response.ok) {
+          throw new Error("Failed to save results.");
+        }
+
+        const { id } = await response.json();
+        return id;
+      };
+
+      const newId = await saveData(data);
+      router.push(`/results?id=${newId}`);
+
 
       toast({
         title: "Conversion successful",

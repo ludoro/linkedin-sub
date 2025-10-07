@@ -24,23 +24,35 @@ export default function ResultsPage() {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    // Get content from URL search params
-    const title = searchParams.get("title")
-    const socialPost = searchParams.get("socialPost")
-    const newsletter = searchParams.get("newsletter")
-    const originalUrl = searchParams.get("originalUrl")
+    const fetchContent = async () => {
+      const id = searchParams.get("id")
 
-    if (title && socialPost && newsletter) {
-      setContent({
-        title: decodeURIComponent(title),
-        socialPost: decodeURIComponent(socialPost),
-        newsletter: decodeURIComponent(newsletter),
-        originalUrl: originalUrl ? decodeURIComponent(originalUrl) : undefined,
-      })
-    } else {
-      setError("No content found. Please try converting again.")
+      if (!id) {
+        setError("No ID found. Please try converting again.")
+        setIsLoading(false)
+        return
+      }
+
+      try {
+        const response = await fetch(`/api/results?id=${id}`)
+        if (!response.ok) {
+          throw new Error("Failed to fetch content.")
+        }
+        const data = await response.json()
+        setContent({
+          title: data.title,
+          socialPost: data.social_post,
+          newsletter: data.newsletter,
+          originalUrl: data.original_url,
+        })
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "An unknown error occurred.")
+      } finally {
+        setIsLoading(false)
+      }
     }
-    setIsLoading(false)
+
+    fetchContent()
   }, [searchParams])
 
   const handleBackToConverter = () => {
