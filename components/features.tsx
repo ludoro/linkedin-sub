@@ -29,8 +29,8 @@ const features = [
   },
   {
     icon: Sparkles,
-    title: "Multiple Formats",
-    description: "One link, multiple content formats for different channels",
+    title: "Add Your Memories",
+    description: "Add your own memories to make the content truly yours and fit your style",
   },
 ]
 

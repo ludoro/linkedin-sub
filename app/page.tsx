@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server"
 import { Hero } from "@/components/hero"
 import { Features } from "@/components/features"
 import { Pricing } from "@/components/pricing"
-import { LinkConverter } from "./link-converter-home"
+import { LinkConverterHome } from "./link-converter-home"
 
 export default async function HomePage() {
   const supabase = createClient()
@@ -19,7 +19,7 @@ export default async function HomePage() {
   return (
     <main className="min-h-screen bg-background">
       <Hero />
-      <LinkConverter />
+      <LinkConverterHome />
       <Features />
       <Pricing />
     </main>

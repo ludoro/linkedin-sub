@@ -63,20 +63,29 @@ export default function LoginPage() {
               className="w-full p-2 mb-4 border rounded"
               disabled={isLoading}
             />
-            <button
-              onClick={handleLogin}
-              className="w-full p-2 text-white bg-blue-500 rounded flex items-center justify-center"
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Logging in...
-                </>
-              ) : (
-                "Login"
-              )}
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={handleLogin}
+                className="w-full p-2 text-white bg-blue-500 rounded flex items-center justify-center"
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Logging in...
+                  </>
+                ) : (
+                  "Login"
+                )}
+              </button>
+              <button
+                onClick={() => router.push("/signup")}
+                className="w-full p-2 text-blue-500 border border-blue-500 rounded"
+                disabled={isLoading}
+              >
+                Sign Up
+              </button>
+            </div>
           </div>
         </div>
       </main>

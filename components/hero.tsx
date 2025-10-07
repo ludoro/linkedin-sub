@@ -11,12 +11,11 @@ export function Hero() {
 
         <h1 className="text-4xl md:text-6xl font-bold mb-4 text-balance">
           Transform Links into
-          <span className="text-primary"> Engaging Content</span>
+          <span className="text-primary"> Content That Fits You</span>
         </h1>
 
         <p className="text-xl text-muted-foreground mb-6 text-pretty max-w-2xl mx-auto">
-          Convert any web link into compelling social media posts and newsletter articles using advanced AI. Save hours
-          of content creation with intelligent summarization.
+          Convert any web link into compelling social media posts and newsletter articles using advanced AI. Add your memories to make the content fit your style.
         </p>
       </div>
     </section>
