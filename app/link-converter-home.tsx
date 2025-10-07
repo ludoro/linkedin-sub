@@ -23,7 +23,7 @@ interface ConversionResult {
   title: string
 }
 
-import { MemoryManager } from "./memory-manager"
+
 
 export function LinkConverter() {
   const router = useRouter()
@@ -31,7 +31,7 @@ export function LinkConverter() {
   const [inputMode, setInputMode] = useState<"url" | "text">("url")
   const [url, setUrl] = useState("")
   const [articleText, setArticleText] = useState("")
-  const [useMemory, setUseMemory] = useState(false)
+
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const { toast } = useToast()
@@ -46,7 +46,22 @@ export function LinkConverter() {
   }
 
   const handleConvert = async () => {
+    if (pathname === "/") {
+      const supabase = createClient()
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
 
+      if (user) {
+        router.push("/dashboard")
+        return
+      }
+
+      if (!user) {
+        router.push("/login")
+        return
+      }
+    }
 
     console.log("Convert button clicked, mode:", inputMode)
 
@@ -75,26 +90,10 @@ export function LinkConverter() {
     setError(null)
 
     try {
-      let memories: string[] = []
-      if (useMemory) {
-        const response = await fetch("/api/memory/get")
-        if (response.ok) {
-          const data = await response.json()
-          memories = data.memories
-        } else {
-          toast({
-            title: "Error",
-            description: "Failed to fetch memories.",
-            variant: "destructive",
-          })
-        }
-      }
-
-      console.log("Making API request to /api/convert")
       const requestBody =
         inputMode === "url"
-          ? { url, mode: "url", memories }
-          : { articleText, mode: "text", memories }
+          ? { url, mode: "url" }
+          : { articleText, mode: "text" }
 
       const response = await fetch("/api/convert", {
         method: "POST",
@@ -155,13 +154,18 @@ export function LinkConverter() {
   return (
     <section className="pb-8 px-4">
       <div className="container mx-auto max-w-6xl">
-
+        <div className="text-center mb-6">
+          <h2 className="text-3xl font-bold mb-4">Try It Now</h2>
+          <p className="text-muted-foreground">
+            {inputMode === "url"
+              ? "Paste any link and watch AI transform it into engaging content"
+              : "Paste your article text and watch AI transform it into engaging content"}
+          </p>
+        </div>
 
         <div className="flex gap-6">
-          <div className="w-1/3">
-            <MemoryManager />
-          </div>
-          <div className="w-2/3">
+
+          <div className="w-full">
             <Card className="mb-6">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -204,14 +208,7 @@ export function LinkConverter() {
                   </Button>
                 </div>
 
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    id="use-memory"
-                    checked={useMemory}
-                    onCheckedChange={setUseMemory}
-                  />
-                  <Label htmlFor="use-memory">Use Memory</Label>
-                </div>
+
 
                 {inputMode === "url" ? (
                   <div className="space-y-4">

@@ -3,7 +3,7 @@
 import { Hero } from "@/components/hero"
 import { Features } from "@/components/features"
 import { Pricing } from "@/components/pricing"
-import { LinkConverter } from "@/components/link-converter"
+import { LinkConverter } from "./link-converter-home"
 
 export default function HomePage() {
   return (
