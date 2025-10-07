@@ -62,7 +62,7 @@ interface Prompt {
 export function LinkConverter() {
   const router = useRouter()
   const pathname = usePathname()
-  const [inputMode, setInputMode] = useState<"url" | "text">("url")
+  const [inputMode, setInputMode] = useState<"url" | "text">("text")
   const [url, setUrl] = useState("")
   const [articleText, setArticleText] = useState("")
   const [useMemory, setUseMemory] = useState(false)
